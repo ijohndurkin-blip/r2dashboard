@@ -2,7 +2,6 @@ import { notFound } from "next/navigation";
 import { modules } from "@/lib/data";
 import { EmailWorkspace } from "@/components/email-workspace";
 import { InvoiceProcessorEmbed } from "@/components/invoice-processor-embed";
-import { InvoiceWorkspace } from "@/components/invoice-workspace";
 import { ModuleView } from "@/components/module-view";
 
 /**
@@ -52,27 +51,13 @@ export default async function ModulePage({
   }
 
   /*
-   * Ade is the one worker you can hand something to, so he is the one with a tool. It
-   * goes in the `tools` slot rather than `children`, which would replace his approvals
-   * and run history — he has both, like everyone else.
-   *
-   * Keyed on the module id rather than a flag in the data: a tool is a real component
-   * with its own behaviour, not something a seed record can describe.
-   */
-  /*
    * A worker's tool, where they have one. Keyed on the module id rather than a flag in
    * the data: a tool is a real component with its own behaviour, not something a seed
-   * record can describe.
-   *
-   * Ade's and Sam's are deliberately different shapes. Ade reads documents, so his is an
-   * upload and a register of figures; Sam handles a stream of conversations with a triage
-   * decision, so his is a split and a conversation list. Giving Sam four money tiles
-   * would have left him showing £0.00 forever.
+   * record can describe. It goes in the `tools` slot rather than `children`, which would
+   * replace their approvals and run history — they still have both, like everyone else.
    */
   const tools =
-    moduleId === "mod-invoice-capture" ? (
-      <InvoiceWorkspace personName={moduleEntry.personName} />
-    ) : moduleId === "mod-customer-email" ? (
+    moduleId === "mod-customer-email" ? (
       <EmailWorkspace
         personName={moduleEntry.personName}
         automationIds={moduleEntry.unlocks}

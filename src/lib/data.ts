@@ -232,32 +232,6 @@ export const automations: Automation[] = [
     ],
   },
   {
-    id: "invoice-capture",
-    name: "Invoice Capture",
-    description:
-      "Reads invoice PDFs as they arrive and pulls out the supplier, dates and totals.",
-    status: "running",
-    trigger: "An invoice PDF is uploaded or arrives by email",
-    handledBy: "Ade",
-    tools: ["SharePoint"],
-    requiresApproval: true,
-    runsToday: 0,
-    lastRun: "",
-    successRate: 96,
-    flow: [
-      { label: "Invoice received", stage: "trigger" },
-      { label: "Ade", stage: "agent" },
-      { label: "Fields extracted", stage: "tools" },
-      { label: "You check the figures", stage: "approval" },
-    ],
-    configuration: [
-      { label: "Reads", value: "Text-based PDFs up to 4MB" },
-      { label: "Extracts", value: "Supplier, invoice number, dates, net, VAT, total" },
-      { label: "Flags", value: "Anything it could not read with confidence" },
-      { label: "Hands to", value: "Grace for matching and posting" },
-    ],
-  },
-  {
     id: "crm-enrichment",
     name: "CRM Enrichment",
     description:
@@ -355,22 +329,6 @@ export const modules: Module[] = [
     monthlyPrice: 120,
     unlocks: ["crm-enrichment"],
     addedOn: "August 2026",
-  },
-  {
-    id: "mod-invoice-capture",
-    personName: "Ade",
-    name: "Invoice Capture",
-    description:
-      "Reads invoice PDFs the moment they arrive, so nothing is typed in by hand.",
-    includes: [
-      "Reads text-based invoice PDFs",
-      "Pulls out supplier, dates, net, VAT and total",
-      "Flags anything it could not read with confidence",
-    ],
-    state: "active",
-    monthlyPrice: 200,
-    unlocks: ["invoice-capture"],
-    addedOn: "September 2026",
   },
   {
     id: "mod-bob-invoice-processor",

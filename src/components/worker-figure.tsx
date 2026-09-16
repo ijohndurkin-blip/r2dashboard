@@ -27,7 +27,7 @@ const WITH_FIGURE = new Set([
   "mod-purchase-ledger",
   "mod-customer-email",
   "mod-customer-records",
-  "mod-invoice-capture",
+  "mod-bob-invoice-processor",
   "mod-supplier-chasing",
   "mod-stock-reordering",
   "mod-statement-reconciliation",

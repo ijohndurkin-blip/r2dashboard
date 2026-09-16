@@ -4,11 +4,8 @@ import { useEffect, useState } from "react";
 
 /**
  * Bob's tool: the actual Rare² Invoice Processor, running in its own repository and
- * deployment, mounted here through an iframe.
- *
- * Unlike Ade's page (mod-invoice-capture), which is a seed-data mockup of the same idea,
- * this is the real working app — its upload, review queue and supplier list are exactly
- * what you'd see visiting it directly, just framed inside the portal.
+ * deployment, mounted here through an iframe. Its upload, review queue and supplier list
+ * are exactly what you'd see visiting it directly, just framed inside the portal.
  *
  * Served from the app's own custom domain rather than a *.vercel.app URL: Vercel applies
  * an anti-clickjacking policy to its shared vercel.app domain that blocks framing outright,
