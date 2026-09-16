@@ -1,0 +1,147 @@
+@import "tailwindcss";
+
+/*
+ * Raresquared Labs — design tokens.
+ * Light palette only: the brief never asks for dark mode, and a half-implemented
+ * one breaks the portal for anyone on a dark OS. See DESIGN.md.
+ */
+@theme {
+  --color-paper: #fbfbfa;
+  --color-surface: #ffffff;
+  --color-ink: #18181b;
+  /*
+   * Both greys are set by contrast, not by eye. Against white, `subtle` was #9aa0a8 —
+   * 2.64:1, well under the WCAG 4.5:1 minimum for body text — which made role labels,
+   * timestamps and separators hard to read. These values keep the three-step hierarchy
+   * (ink > muted > subtle) while clearing the floor. Verify with the contrast script in
+   * DESIGN.md before changing either.
+   */
+  --color-muted: #5f6673;
+  --color-subtle: #6d737d;
+  /*
+   * Navigation rows only — a darker grey than `muted` so the rail's resting rows read
+   * firmly rather than faintly, while staying ~8x lighter in luminance than `ink` so the
+   * active row keeps its distinction. 8.27:1 on white. Scoped to the rail deliberately:
+   * `muted` has ~47 call sites and darkening it globally would shift the whole portal.
+   */
+  --color-nav: #4a4f59;
+  --color-line: #e7e7e4;
+  --color-line-strong: #d8d8d4;
+
+  /*
+   * Brand, sampled from the logo artwork itself (canvas pixel tally, not eyeballed).
+   * `brand` is the deep navy that forms the mark — white on it scores 14.69:1, so it is
+   * safe as a filled surface. `brand-accent` is the bright cyan on the superscript and
+   * node motif: white on it is only 2.76:1, so it is a highlight on light backgrounds
+   * ONLY — never a tile or button fill carrying white text.
+   */
+  --color-brand: #082850;
+  --color-brand-accent: #08a8d8;
+
+  /* Status only. Never decoration, never a gradient. */
+  --color-signal: #15803d;
+  --color-signal-soft: #f0f7f1;
+  --color-flag: #b45309;
+  --color-flag-soft: #fdf6ec;
+  --color-fault: #b91c1c;
+  --color-fault-soft: #fdf2f2;
+
+  --font-sans: var(--font-inter-tight), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains-mono), ui-monospace, monospace;
+
+  /* Content cap: 1280px leaves dead margins at 1440/1920. */
+  --container-shell: 100rem;
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+
+    /*
+     * Always reserve the scrollbar track, so centred columns do not jump when a route or
+     * tab swaps short content for tall. Measured on Approvals: the 3 pending cards run
+     * 1181px against a 749px viewport and raise a 15px scrollbar, while the 1 completed
+     * card fits and drops it — returning 15px of width that mx-auto split either side and
+     * slid both tabs 7.5px sideways on every click.
+     */
+    scrollbar-gutter: stable;
+  }
+
+  body {
+    background-color: var(--color-paper);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-feature-settings: "cv05" 1;
+  }
+
+  /* Counts and times align as a column of numbers. */
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /*
+   * Row measure.
+   *
+   * Rows in this portal put a label on the left and its value on the right via
+   * `justify-between`. That was fine at the widths these were built at, but the content
+   * shell is now 1400px, so a 1110px row pushed the value to the card edge — measured
+   * gaps of 660px on Home, 721px in Settings integrations, 877px in session rows. At that
+   * distance the eye cannot connect "SharePoint" to "Connected"; the row reads as two
+   * unrelated halves.
+   *
+   * Capping the row's content to a readable measure keeps the pair together while leaving
+   * the card itself full width. Defined once here so every row shares one value instead
+   * of drifting per component.
+   */
+  .row-measure {
+    max-width: 46rem; /* ~736px: long enough for the longest label + value, short enough to scan */
+  }
+
+  /*
+   * The worker's avatar arriving as their dialog opens.
+   *
+   * One shot, never a loop. Opening the dialog is a user action, so an entrance is
+   * allowed under principle 5; a looping idle would be decoration, and looping motion in
+   * this portal is reserved for live status (the pinging dots). The dialog is
+   * conditionally rendered, so this fires once per open without any JS.
+   *
+   * The reduced-motion block below clamps the duration to 0.01ms, so the avatar simply
+   * appears for anyone who asked not to be moved.
+   */
+  @keyframes avatar-in {
+    from {
+      opacity: 0;
+      transform: scale(0.8);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  .avatar-in {
+    animation: avatar-in 260ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-ink);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+
+  ::selection {
+    background-color: #e4e4e1;
+  }
+}
+
+/* Motion answers user action only. Honour the OS preference. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

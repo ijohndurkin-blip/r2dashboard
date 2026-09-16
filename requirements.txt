@@ -1,0 +1,2 @@
+# The only dependency of api/extract.py. Pinned, as the invoice processor pins it.
+pdfplumber==0.11.8

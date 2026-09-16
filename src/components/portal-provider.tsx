@@ -1,0 +1,277 @@
+"use client";
+
+/**
+ * Shared portal state.
+ *
+ * The brief requires Approve/Reject and the notification bell to actually work, and the
+ * counts are cross-page: approving on /approvals must change Home's "needs your attention"
+ * count and the bell badge at the same time. A static data module can't do that, so the
+ * seed data is loaded into one provider mounted in the root layout. Pages stay server
+ * components; only the interactive pieces read from here.
+ */
+
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
+import {
+  approvals as seedApprovals,
+  automations as seedAutomations,
+  integrations as seedIntegrations,
+  modules as seedModules,
+  notificationPreferences as seedPreferences,
+  notifications as seedNotifications,
+  recentWork as seedRecentWork,
+  runs as seedRuns,
+} from "@/lib/data";
+import type {
+  AppNotification,
+  Approval,
+  Automation,
+  Integration,
+  Module,
+  NotificationPreferences,
+  Run,
+  WorkItem,
+} from "@/lib/types";
+
+interface PortalState {
+  approvals: Approval[];
+  /** Approvals still waiting on the client, newest first. */
+  pendingApprovals: Approval[];
+  /** Approvals the client has already actioned. */
+  completedApprovals: Approval[];
+  automations: Automation[];
+  notifications: AppNotification[];
+  unreadCount: number;
+  integrations: Integration[];
+  preferences: NotificationPreferences;
+  modules: Module[];
+  /** Modules on the account, newest addition last. */
+  activeModules: Module[];
+  /** Modules the client could add. */
+  availableModules: Module[];
+  /** Runs belonging to automations the client actually has. */
+  runs: Run[];
+  /** Completed work from automations the client actually has. */
+  recentWork: WorkItem[];
+  /** True when nothing needs the client's attention. */
+  allHealthy: boolean;
+
+  approveRequest: (id: string) => void;
+  rejectRequest: (id: string) => void;
+  markNotificationRead: (id: string) => void;
+  markAllNotificationsRead: () => void;
+  setPreference: (key: keyof NotificationPreferences, value: boolean) => void;
+  /**
+   * Add a module to the account. Today this flips local state; when a payment provider
+   * is wired up, this is the single call site that becomes an async checkout.
+   */
+  purchaseModule: (id: string) => void;
+}
+
+const PortalContext = createContext<PortalState | null>(null);
+
+/** Timestamp for a just-taken action, in the same style as the seed data. */
+function nowLabel(): string {
+  return new Date().toLocaleTimeString("en-GB", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+export function PortalProvider({ children }: { children: ReactNode }) {
+  const [approvals, setApprovals] = useState<Approval[]>(seedApprovals);
+  const [notifications, setNotifications] = useState<AppNotification[]>(seedNotifications);
+  const [preferences, setPreferences] = useState<NotificationPreferences>(seedPreferences);
+  const [integrations] = useState<Integration[]>(seedIntegrations);
+  const [modules, setModules] = useState<Module[]>(seedModules);
+
+  /**
+   * Resolving an approval also clears any notification that pointed at it, so the bell
+   * never keeps nagging about work the client has already done.
+   */
+  const resolve = useCallback(
+    (id: string, outcome: "approved" | "rejected") => {
+      setApprovals((current) =>
+        current.map((approval) =>
+          approval.id === id && !approval.resolution
+            ? { ...approval, resolution: { outcome, when: `Today at ${nowLabel()}` } }
+            : approval,
+        ),
+      );
+      // Clear only the notification raised for *this* approval. Matching on kind alone
+      // would dismiss unrelated requests the client has not looked at yet.
+      setNotifications((current) =>
+        current.map((notification) =>
+          notification.approvalId === id && !notification.read
+            ? { ...notification, read: true }
+            : notification,
+        ),
+      );
+    },
+    [],
+  );
+
+  const approveRequest = useCallback((id: string) => resolve(id, "approved"), [resolve]);
+  const rejectRequest = useCallback((id: string) => resolve(id, "rejected"), [resolve]);
+
+  const markNotificationRead = useCallback((id: string) => {
+    setNotifications((current) =>
+      current.map((notification) =>
+        notification.id === id ? { ...notification, read: true } : notification,
+      ),
+    );
+  }, []);
+
+  const markAllNotificationsRead = useCallback(() => {
+    setNotifications((current) => current.map((n) => (n.read ? n : { ...n, read: true })));
+  }, []);
+
+  const setPreference = useCallback(
+    (key: keyof NotificationPreferences, value: boolean) => {
+      setPreferences((current) => ({ ...current, [key]: value }));
+    },
+    [],
+  );
+
+  /**
+   * Adding a module switches on the automations behind it and tells the client it is live.
+   * Replacing this body with a checkout call is the only change a real payment flow needs.
+   */
+  const purchaseModule = useCallback((id: string) => {
+    setModules((current) =>
+      current.map((module) =>
+        module.id === id && module.state === "available"
+          ? { ...module, state: "active", addedOn: "Just now" }
+          : module,
+      ),
+    );
+
+    const added = seedModules.find((module) => module.id === id);
+    if (!added) return;
+
+    setNotifications((current) => [
+      {
+        id: `ntf-mod-${id}`,
+        kind: "automation-activated",
+        title: `${added.name} is now live`,
+        detail: `${added.description}`,
+        relativeTime: "Just now",
+        read: false,
+        href: "/systems",
+      },
+      ...current,
+    ]);
+  }, []);
+
+  const value = useMemo<PortalState>(() => {
+    const activeModules = modules.filter((module) => module.state === "active");
+    const availableModules = modules.filter((module) => module.state === "available");
+
+    /*
+     * Everything the client sees is scoped to the modules on their account. Without this
+     * the portal would report approvals and work for automations they do not have, which
+     * is exactly the kind of thing that destroys trust in what the portal is telling them.
+     */
+    const unlocked = new Set(activeModules.flatMap((module) => module.unlocks));
+    const automations = seedAutomations.filter((automation) => unlocked.has(automation.id));
+    const runs = seedRuns.filter((run) => unlocked.has(run.automationId));
+
+    const unlockedNames = new Set(automations.map((automation) => automation.name));
+    const recentWork = seedRecentWork.filter((item) =>
+      unlockedNames.has(item.automationName),
+    );
+
+    const visibleApprovals = approvals.filter((approval) =>
+      unlocked.has(approval.automationId),
+    );
+
+    /*
+     * Notifications are gated too. Without this the bell could nag about work belonging
+     * to a module the client has not bought — the same failure the other surfaces are
+     * filtered to prevent. A notification with no approvalId (a general one) always shows.
+     */
+    const visibleNotifications = notifications.filter((notification) => {
+      if (!notification.approvalId) return true;
+      const source = approvals.find((a) => a.id === notification.approvalId);
+      return !source || unlocked.has(source.automationId);
+    });
+    /*
+     * Pending approvals, the urgent ones first.
+     *
+     * Sorted here rather than in the card, so the rail's counts, Home's three and the
+     * full list on /approvals all agree on which ones lead. A card that sorted for itself
+     * would show a different top three from the page it links to.
+     *
+     * Within each group the source order is kept, which is newest first. That is
+     * deliberate: age is a weak signal on its own — the oldest of these has been waiting
+     * since yesterday precisely because nothing about it is urgent.
+     */
+    const pendingApprovals = visibleApprovals
+      .filter((approval) => !approval.resolution)
+      .slice()
+      .sort((a, b) => Number(b.urgent ?? false) - Number(a.urgent ?? false));
+    const completedApprovals = visibleApprovals.filter((approval) => approval.resolution);
+
+    /*
+     * Summed only to answer "is anything outstanding at all?". It used to be exposed as
+     * attentionCount and printed as "4 items need your attention", which disagreed with
+     * every other count on Home; the band now names approvals and unhealthy systems
+     * separately, so the total stays internal to this flag.
+     */
+    const unhealthy = automations.filter(
+      (automation) => automation.status === "needs-attention",
+    ).length;
+    const outstanding = pendingApprovals.length + unhealthy;
+
+    return {
+      approvals: visibleApprovals,
+      pendingApprovals,
+      completedApprovals,
+      automations,
+      notifications: visibleNotifications,
+      unreadCount: visibleNotifications.filter((notification) => !notification.read).length,
+      integrations,
+      preferences,
+      modules,
+      activeModules,
+      availableModules,
+      runs,
+      recentWork,
+      allHealthy: outstanding === 0,
+      approveRequest,
+      rejectRequest,
+      markNotificationRead,
+      markAllNotificationsRead,
+      setPreference,
+      purchaseModule,
+    };
+  }, [
+    approvals,
+    modules,
+    notifications,
+    integrations,
+    preferences,
+    approveRequest,
+    rejectRequest,
+    markNotificationRead,
+    markAllNotificationsRead,
+    setPreference,
+    purchaseModule,
+  ]);
+
+  return <PortalContext.Provider value={value}>{children}</PortalContext.Provider>;
+}
+
+export function usePortal(): PortalState {
+  const context = useContext(PortalContext);
+  if (!context) {
+    throw new Error("usePortal must be used inside PortalProvider");
+  }
+  return context;
+}
