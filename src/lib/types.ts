@@ -272,3 +272,14 @@ export interface Support {
   /** When someone is there, e.g. "Monday to Friday, 8am–6pm". */
   hours: string;
 }
+
+/**
+ * One invoice flagged for review, read live from the standalone Rare² Invoice Processor
+ * (Bob's real application) rather than from this portal's own seed data.
+ */
+export interface ExternalReviewItem {
+  id: string;
+  invoiceNumber: string;
+  supplierName: string;
+  totalAmount: number | null;
+}

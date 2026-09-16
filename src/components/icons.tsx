@@ -5,6 +5,7 @@ import {
   ChevronDown,
   ChevronRight,
   Clock,
+  ExternalLink,
   FileText,
   House,
   Link2,
@@ -113,6 +114,7 @@ export const InvoiceIcon = wrap(ReceiptText);
 export const ContactIcon = wrap(User);
 /* Consumed by the iconsByKey dispatcher below (IconKey "link"), not by any component. */
 export const LinkIcon = wrap(Link2);
+export const ExternalLinkIcon = wrap(ExternalLink);
 export const BoxIcon = wrap(Package);
 
 // Flow stages

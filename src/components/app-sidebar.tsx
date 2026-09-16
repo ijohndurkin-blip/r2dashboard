@@ -91,7 +91,7 @@ function Wordmark({
 /** The rail's contents, shared by the fixed desktop rail and the mobile drawer. */
 function RailContents({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname();
-  const { pendingApprovals, activeModules } = usePortal();
+  const { pendingApprovals, activeModules, bobReviewItems } = usePortal();
 
   /*
    * Exact match for "/" and for "/systems".
@@ -256,10 +256,17 @@ function RailContents({ onNavigate }: { onNavigate?: () => void }) {
                  * Approvals waiting on THIS worker, counted exactly as their own page
                  * counts them — same filter, so the rail and the page cannot disagree.
                  * Grace runs two automations, so hers is the sum across both.
+                 *
+                 * Bob is the one exception: he isn't backed by seed automations at all
+                 * (`unlocks` is empty), so his count comes from his own live application
+                 * instead — see bobReviewItems in the portal provider.
                  */
-                const waitingOnWorker = pendingApprovals.filter((approval) =>
-                  module.unlocks.includes(approval.automationId),
-                ).length;
+                const waitingOnWorker =
+                  module.id === "mod-bob-invoice-processor"
+                    ? bobReviewItems.length
+                    : pendingApprovals.filter((approval) =>
+                        module.unlocks.includes(approval.automationId),
+                      ).length;
                 return (
                   <li key={module.id}>
                     {/*

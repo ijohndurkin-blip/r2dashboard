@@ -14,6 +14,7 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useState,
   type ReactNode,
@@ -32,12 +33,16 @@ import type {
   AppNotification,
   Approval,
   Automation,
+  ExternalReviewItem,
   Integration,
   Module,
   NotificationPreferences,
   Run,
   WorkItem,
 } from "@/lib/types";
+
+/** Where Bob's real application lives — see invoice-processor-embed.tsx for the same URL. */
+const INVOICE_PROCESSOR_ORIGIN = "https://invoices.raresquaredlabs.co.uk";
 
 interface PortalState {
   approvals: Approval[];
@@ -61,6 +66,13 @@ interface PortalState {
   recentWork: WorkItem[];
   /** True when nothing needs the client's attention. */
   allHealthy: boolean;
+
+  /**
+   * Invoices flagged for review, read live from Bob's real application rather than seed
+   * data. Empty until that app has been opened at least once in this browser (its session
+   * cookie is what authenticates the read) — never an error, just nothing to show yet.
+   */
+  bobReviewItems: ExternalReviewItem[];
 
   approveRequest: (id: string) => void;
   rejectRequest: (id: string) => void;
@@ -90,6 +102,52 @@ export function PortalProvider({ children }: { children: ReactNode }) {
   const [preferences, setPreferences] = useState<NotificationPreferences>(seedPreferences);
   const [integrations] = useState<Integration[]>(seedIntegrations);
   const [modules, setModules] = useState<Module[]>(seedModules);
+  const [bobReviewItems, setBobReviewItems] = useState<ExternalReviewItem[]>([]);
+
+  /*
+   * Polls Bob's real backend for its own live review queue. This is the one piece of
+   * portal state that isn't seed data — everything else here is a demo the client can
+   * ignore, but Bob's badge and the Approvals page should reflect his actual invoices.
+   *
+   * Silently gives up on any failure (offline, not yet authenticated in this browser,
+   * CORS not configured yet) and leaves the list as it was — a stale or empty count is
+   * fine; breaking the dashboard over it is not.
+   */
+  useEffect(() => {
+    let cancelled = false;
+    async function poll() {
+      try {
+        const res = await fetch(`${INVOICE_PROCESSOR_ORIGIN}/api/state`, {
+          credentials: "include",
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+        const invoices = Array.isArray(data.invoices) ? data.invoices : [];
+        const items: ExternalReviewItem[] = invoices
+          .filter((invoice: { status?: string }) => invoice.status === "needs_review")
+          .map((invoice: {
+            id: string;
+            invoiceNumber: string;
+            supplierName: string;
+            totalAmount: number | null;
+          }) => ({
+            id: invoice.id,
+            invoiceNumber: invoice.invoiceNumber,
+            supplierName: invoice.supplierName,
+            totalAmount: invoice.totalAmount,
+          }));
+        if (!cancelled) setBobReviewItems(items);
+      } catch {
+        // Offline, blocked, or not yet authenticated — nothing to do here.
+      }
+    }
+    poll();
+    const timer = window.setInterval(poll, 60000);
+    return () => {
+      cancelled = true;
+      window.clearInterval(timer);
+    };
+  }, []);
 
   /**
    * Resolving an approval also clears any notification that pointed at it, so the bell
@@ -244,6 +302,7 @@ export function PortalProvider({ children }: { children: ReactNode }) {
       runs,
       recentWork,
       allHealthy: outstanding === 0,
+      bobReviewItems,
       approveRequest,
       rejectRequest,
       markNotificationRead,
@@ -257,6 +316,7 @@ export function PortalProvider({ children }: { children: ReactNode }) {
     notifications,
     integrations,
     preferences,
+    bobReviewItems,
     approveRequest,
     rejectRequest,
     markNotificationRead,

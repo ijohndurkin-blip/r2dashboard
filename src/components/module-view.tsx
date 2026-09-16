@@ -5,6 +5,7 @@ import type { ReactNode } from "react";
 import { ActivityRun } from "./activity-run";
 import { ApprovalCard } from "./approval-card";
 import { EmptyState } from "./empty-state";
+import { ExternalReviewList } from "./external-review-list";
 import { PageHeader } from "./page-header";
 import { WorkerAvatar } from "./worker-avatar";
 import { CheckIcon, HistoryIcon } from "./icons";
@@ -41,7 +42,8 @@ export function ModuleView({
    */
   tools?: ReactNode;
 }) {
-  const { modules, activeModules, automations, runs, pendingApprovals } = usePortal();
+  const { modules, activeModules, automations, runs, pendingApprovals, bobReviewItems } =
+    usePortal();
 
   const moduleEntry = modules.find((entry) => entry.id === moduleId);
   const isActive = activeModules.some((entry) => entry.id === moduleId);
@@ -83,6 +85,16 @@ export function ModuleView({
     moduleEntry.unlocks.includes(approval.automationId),
   );
 
+  /*
+   * Bob isn't backed by seed automations at all (`unlocks` is empty), so his own status
+   * band and "Waiting on you" count come from his live application instead — otherwise
+   * this page would say "Running normally" right above an embedded app showing the
+   * opposite, which is exactly the kind of disagreeing-numbers failure DESIGN.md warns
+   * against elsewhere on this page.
+   */
+  const isBob = moduleId === "mod-bob-invoice-processor";
+  const waitingCount = isBob ? bobReviewItems.length : moduleApprovals.length;
+
   const needsAttention = moduleAutomations.some((a) => a.status === "needs-attention");
   const runsToday = moduleAutomations.reduce((total, a) => total + a.runsToday, 0);
   const lastRun = moduleAutomations[0]?.lastRun;
@@ -98,13 +110,13 @@ export function ModuleView({
    * its own rate further down, where it is attributable.
    */
   const headline =
-    moduleApprovals.length > 0
-      ? `${moduleApprovals.length} ${
-          moduleApprovals.length === 1 ? "approval waiting" : "approvals waiting"
-        } on you`
-      : needsAttention
+    waitingCount === 0
+      ? needsAttention
         ? "Needs attention"
-        : "Running normally";
+        : "Running normally"
+      : isBob
+        ? `${waitingCount} ${waitingCount === 1 ? "invoice needs" : "invoices need"} review`
+        : `${waitingCount} ${waitingCount === 1 ? "approval" : "approvals"} waiting on you`;
 
   return (
     <div className="flex flex-col gap-8">
@@ -153,12 +165,12 @@ export function ModuleView({
           <span
             aria-hidden="true"
             className={`relative flex h-2.5 w-2.5 shrink-0 rounded-full ${
-              moduleApprovals.length > 0 || needsAttention ? "bg-flag" : "bg-signal"
+              waitingCount > 0 || needsAttention ? "bg-flag" : "bg-signal"
             }`}
           >
             <span
               className={`absolute inset-0 animate-ping rounded-full opacity-50 motion-reduce:animate-none ${
-                moduleApprovals.length > 0 || needsAttention ? "bg-flag" : "bg-signal"
+                waitingCount > 0 || needsAttention ? "bg-flag" : "bg-signal"
               }`}
             />
           </span>
@@ -223,14 +235,27 @@ export function ModuleView({
               className="flex items-baseline gap-2 text-[15px] font-semibold text-ink"
             >
               Waiting on you
-              {moduleApprovals.length > 0 ? (
+              {waitingCount > 0 ? (
                 <span className="tabular text-[13px] font-normal text-muted">
-                  {moduleApprovals.length}
+                  {waitingCount}
                 </span>
               ) : null}
             </h2>
 
-            {moduleApprovals.length === 0 ? (
+            {isBob ? (
+              bobReviewItems.length === 0 ? (
+                <div className="rounded-xl border border-line bg-surface">
+                  <EmptyState
+                    compact
+                    icon={<CheckIcon className="h-5 w-5" />}
+                    title="Nothing waiting on you."
+                    description={`${moduleEntry.personName} has no decisions outstanding.`}
+                  />
+                </div>
+              ) : (
+                <ExternalReviewList items={bobReviewItems} />
+              )
+            ) : moduleApprovals.length === 0 ? (
               <div className="rounded-xl border border-line bg-surface">
                 <EmptyState
                   compact
