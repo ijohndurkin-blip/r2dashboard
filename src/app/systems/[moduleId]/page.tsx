@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { modules } from "@/lib/data";
 import { EmailWorkspace } from "@/components/email-workspace";
+import { InvoiceProcessorEmbed } from "@/components/invoice-processor-embed";
 import { InvoiceWorkspace } from "@/components/invoice-workspace";
 import { ModuleView } from "@/components/module-view";
 
@@ -76,6 +77,8 @@ export default async function ModulePage({
         personName={moduleEntry.personName}
         automationIds={moduleEntry.unlocks}
       />
+    ) : moduleId === "mod-bob-invoice-processor" ? (
+      <InvoiceProcessorEmbed />
     ) : undefined;
 
   return <ModuleView moduleId={moduleId} tools={tools} />;

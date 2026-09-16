@@ -373,6 +373,22 @@ export const modules: Module[] = [
     addedOn: "September 2026",
   },
   {
+    id: "mod-bob-invoice-processor",
+    personName: "Bob",
+    name: "Invoice Processor",
+    description:
+      "Runs the standalone Rare² Invoice Processor — upload, review queue and supplier register, embedded here.",
+    includes: [
+      "Uploads invoice PDFs for extraction",
+      "Holds anything that needs review in its own queue",
+      "Keeps a supplier register up to date",
+    ],
+    state: "active",
+    monthlyPrice: 0,
+    unlocks: [],
+    addedOn: "September 2026",
+  },
+  {
     id: "mod-supplier-chasing",
     personName: "Nadia",
     name: "Supplier Chasing",
