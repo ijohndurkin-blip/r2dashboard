@@ -6,11 +6,11 @@
  * this is the real working app — its upload, review queue and supplier list are exactly
  * what you'd see visiting it directly, just framed inside the portal.
  *
- * Points at a specific Vercel deployment URL for now. That kind of URL is tied to one
- * build and changes on every deploy — swap it for the project's stable production domain
- * (Vercel project settings → Domains) once that's set up, so this doesn't go stale.
+ * Served from the app's own custom domain rather than a *.vercel.app URL: Vercel applies
+ * an anti-clickjacking policy to its shared vercel.app domain that blocks framing outright,
+ * regardless of what headers the app itself sends. A custom domain isn't subject to it.
  */
-const INVOICE_PROCESSOR_URL = "https://rare2-invoice-processor-38bvx7xlm-jdurkin.vercel.app/";
+const INVOICE_PROCESSOR_URL = "https://invoices.raresquaredlabs.co.uk/";
 
 export function InvoiceProcessorEmbed() {
   return (
