@@ -149,6 +149,26 @@ export function PortalProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
+  /*
+   * The 60s poll above is a baseline that works from anywhere in the portal, but it left
+   * a real gap: acting on an invoice inside Bob's own embedded iframe didn't move his
+   * badge until the next poll landed, which read as "you have to refresh". His app posts
+   * its review queue on every data change (see App.tsx's loadData there); this catches
+   * that broadcast and updates immediately whenever his iframe happens to be mounted,
+   * with the poll still covering every other page and the time before he's ever opened.
+   */
+  useEffect(() => {
+    function onMessage(event: MessageEvent) {
+      if (event.origin !== INVOICE_PROCESSOR_ORIGIN) return;
+      const data = event.data as { type?: string; items?: ExternalReviewItem[] } | null;
+      if (data?.type === "rare2-invoice-processor:review-queue" && Array.isArray(data.items)) {
+        setBobReviewItems(data.items);
+      }
+    }
+    window.addEventListener("message", onMessage);
+    return () => window.removeEventListener("message", onMessage);
+  }, []);
+
   /**
    * Resolving an approval also clears any notification that pointed at it, so the bell
    * never keeps nagging about work the client has already done.

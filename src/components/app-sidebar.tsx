@@ -142,7 +142,10 @@ function RailContents({ onNavigate }: { onNavigate?: () => void }) {
         <ul className="flex flex-col gap-1">
           {navigation.map((item) => {
             const active = isActive(item.href);
-            const waiting = item.href === "/approvals" ? pendingApprovals.length : 0;
+            const waiting =
+              item.href === "/approvals"
+                ? pendingApprovals.length + bobReviewItems.length
+                : 0;
             const ItemIcon = item.icon;
             return (
               <li key={item.href}>
