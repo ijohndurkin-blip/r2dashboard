@@ -42,8 +42,15 @@ export function ModuleView({
    */
   tools?: ReactNode;
 }) {
-  const { modules, activeModules, automations, runs, pendingApprovals, bobReviewItems } =
-    usePortal();
+  const {
+    modules,
+    activeModules,
+    automations,
+    runs,
+    pendingApprovals,
+    bobReviewItems,
+    bobRunsToday,
+  } = usePortal();
 
   const moduleEntry = modules.find((entry) => entry.id === moduleId);
   const isActive = activeModules.some((entry) => entry.id === moduleId);
@@ -96,7 +103,9 @@ export function ModuleView({
   const waitingCount = isBob ? bobReviewItems.length : moduleApprovals.length;
 
   const needsAttention = moduleAutomations.some((a) => a.status === "needs-attention");
-  const runsToday = moduleAutomations.reduce((total, a) => total + a.runsToday, 0);
+  const runsToday = isBob
+    ? bobRunsToday
+    : moduleAutomations.reduce((total, a) => total + a.runsToday, 0);
   const lastRun = moduleAutomations[0]?.lastRun;
 
   /*

@@ -277,10 +277,10 @@ export const modules: Module[] = [
       "Matches them line by line to the purchase order",
       "Files the paperwork automatically",
     ],
-    state: "active",
+    state: "available",
     monthlyPrice: 240,
     unlocks: ["goods-receipt-review"],
-    addedOn: "March 2026",
+    typicalImpact: "Most merchants catch a short or damaged delivery within the same week.",
   },
   {
     id: "mod-purchase-ledger",
@@ -293,10 +293,10 @@ export const modules: Module[] = [
       "Three-way match against order and delivery",
       "Asks you before posting anything unexpected",
     ],
-    state: "active",
+    state: "available",
     monthlyPrice: 320,
     unlocks: ["invoice-processing", "purchase-order-matching"],
-    addedOn: "March 2026",
+    typicalImpact: "Merchants your size process upwards of 40 supplier invoices a month.",
   },
   {
     id: "mod-customer-email",
@@ -309,10 +309,10 @@ export const modules: Module[] = [
       "Logs every conversation against the customer",
       "Passes complaints and credit queries to your team",
     ],
-    state: "active",
+    state: "available",
     monthlyPrice: 180,
     unlocks: ["email-processing"],
-    addedOn: "June 2026",
+    typicalImpact: "Most merchants answer routine stock questions in minutes, not hours.",
   },
   {
     id: "mod-customer-records",
@@ -325,10 +325,10 @@ export const modules: Module[] = [
       "Runs on every new customer record",
       "Keeps HubSpot tidy",
     ],
-    state: "active",
+    state: "available",
     monthlyPrice: 120,
     unlocks: ["crm-enrichment"],
-    addedOn: "August 2026",
+    typicalImpact: "Keeps a growing customer list accurate without extra admin time.",
   },
   {
     id: "mod-bob-invoice-processor",
@@ -341,10 +341,9 @@ export const modules: Module[] = [
       "Holds anything that needs review in its own queue",
       "Keeps a supplier register up to date",
     ],
-    state: "active",
+    state: "available",
     monthlyPrice: 0,
     unlocks: [],
-    addedOn: "September 2026",
   },
   {
     id: "mod-supplier-chasing",
@@ -603,44 +602,15 @@ export const recentWork: WorkItem[] = [
   },
 ];
 
-export const notifications: AppNotification[] = [
-  {
-    id: "ntf-2",
-    kind: "automation-failed",
-    title: "Invoice Processing hit a problem",
-    detail: "A customer record couldn't be updated. Raresquared is retrying.",
-    relativeTime: "6 minutes ago",
-    read: false,
-    href: "/activity",
-  },
-  {
-    id: "ntf-4",
-    kind: "integration-disconnected",
-    title: "Xero needs reconnecting",
-    detail: "The connection expired, so invoices are queuing until it is restored.",
-    relativeTime: "2 hours ago",
-    read: true,
-    href: "/settings",
-  },
-  {
-    id: "ntf-5",
-    kind: "automation-recovered",
-    title: "Email Processing is back to normal",
-    detail: "Microsoft 365 responded again and the backlog has cleared.",
-    relativeTime: "Yesterday",
-    read: true,
-    href: "/systems",
-  },
-  {
-    id: "ntf-6",
-    kind: "automation-activated",
-    title: "CRM Enrichment is now live",
-    detail: "New customer records will have their trading details filled in.",
-    relativeTime: "Monday",
-    read: true,
-    href: "/systems",
-  },
-];
+/*
+ * Empty rather than seeded demo notifications. Unlike the other seed arrays (automations,
+ * runs, recentWork), these had no approvalId to scope them to a module the client
+ * actually has — they showed up in "Latest updates" unconditionally, even with nobody
+ * hired, which is exactly the "fictitious by default" failure this account starts clean
+ * from now. purchaseModule still adds a real "X is now live" notification on hire, and
+ * Bob's real ones (bobNotifications in portal-provider.tsx) are the only other source.
+ */
+export const notifications: AppNotification[] = [];
 
 export const integrations: Integration[] = [
   {

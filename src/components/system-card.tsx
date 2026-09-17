@@ -30,13 +30,18 @@ export function SystemCard({
   /** Runs belonging to those automations, newest first. */
   runs: Run[];
 }) {
-  const { removeModule } = usePortal();
+  const { removeModule, bobReviewItems, bobRunsToday } = usePortal();
   const { open, openDialog, close, panelRef, triggerRef } = useDialog<HTMLDivElement>();
   const titleId = `system-${module.id}-title`;
   const [removing, setRemoving] = useState(false);
+  const isBob = module.id === "mod-bob-invoice-processor";
 
-  const runsToday = automations.reduce((total, a) => total + a.runsToday, 0);
-  const needsAttention = automations.some((a) => a.status === "needs-attention");
+  const runsToday = isBob
+    ? bobRunsToday
+    : automations.reduce((total, a) => total + a.runsToday, 0);
+  const needsAttention = isBob
+    ? bobReviewItems.length > 0
+    : automations.some((a) => a.status === "needs-attention");
   const lastRun = automations[0]?.lastRun;
 
   return (

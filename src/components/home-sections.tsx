@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { Card, CardHeader } from "./card";
 import { EmptyState } from "./empty-state";
-import { CheckIcon, ChevronRightIcon, Icon, PauseIcon } from "./icons";
+import { BoxIcon, CheckIcon, ChevronRightIcon, Icon, PauseIcon } from "./icons";
 import { usePortal } from "./portal-provider";
 import { StatusIndicator } from "./status-indicator";
 import { WorkerAvatar } from "./worker-avatar";
@@ -365,11 +365,65 @@ export function RecentWorkList() {
 
 /** Each automation, its health, and how much it has done today — one line each. */
 export function AutomationSnapshotList() {
-  const { automations, activeModules } = usePortal();
+  const { automations, activeModules, bobReviewItems, bobRunsToday } = usePortal();
+  const bobIsActive = activeModules.some((module) => module.id === "mod-bob-invoice-processor");
+
+  if (automations.length === 0 && !bobIsActive) {
+    return (
+      <EmptyState
+        compact
+        icon={<BoxIcon className="h-5 w-5" />}
+        title="Nobody working yet"
+        description="Take someone on from Hire workers and their activity shows up here."
+      />
+    );
+  }
 
   return (
     <ul className="divide-y divide-line">
-      {automations.slice(0, 5).map((automation) => {
+      {/*
+       * Bob's real activity, not a seed automation — there's no fabricated flow diagram
+       * or success rate behind him to reuse the row below for, so this is hand-built from
+       * the same real numbers his sidebar badge and Home's attention list already use.
+       */}
+      {bobIsActive ? (
+        <li className="px-5 py-3.5">
+          <Link
+            href="/systems/mod-bob-invoice-processor"
+            className="group flex items-center justify-between gap-4"
+          >
+            <WorkerAvatar
+              moduleId="mod-bob-invoice-processor"
+              size={28}
+              className="mt-0.5 shrink-0"
+            />
+            <span className="min-w-0 flex-1">
+              <span className="block truncate text-sm font-medium text-ink">
+                Invoice Processing
+              </span>
+              <span className="mt-1 flex items-center gap-1.5 text-[12.5px] text-muted">
+                <span className="shrink-0">Bob</span>
+                <span aria-hidden="true" className="text-subtle">
+                  ·
+                </span>
+                <StatusIndicator status={bobReviewItems.length > 0 ? "needs-attention" : "running"} />
+              </span>
+            </span>
+            <span className="shrink-0 text-right">
+              <span className="tabular block text-[12.5px] text-muted">
+                {bobRunsToday} {bobRunsToday === 1 ? "invoice" : "invoices"} today
+              </span>
+              {bobReviewItems.length > 0 ? (
+                <span className="mt-0.5 block text-[12.5px] font-medium text-flag">
+                  {bobReviewItems.length} {bobReviewItems.length === 1 ? "approval" : "approvals"}{" "}
+                  pending
+                </span>
+              ) : null}
+            </span>
+          </Link>
+        </li>
+      ) : null}
+      {automations.slice(0, bobIsActive ? 4 : 5).map((automation) => {
         const worker = workerFor(activeModules, automation.id);
         return (
         <li key={automation.id} className="px-5 py-3.5">

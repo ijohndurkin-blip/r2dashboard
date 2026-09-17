@@ -34,6 +34,7 @@ import type {
   AppNotification,
   Approval,
   Automation,
+  ExternalInvoiceSummary,
   ExternalReviewItem,
   Integration,
   Module,
@@ -47,6 +48,43 @@ const INVOICE_PROCESSOR_ORIGIN = "https://invoices.raresquaredlabs.co.uk";
 
 /** Which workers are active vs. available to hire — the one thing here worth persisting. */
 const MODULES_STORAGE_KEY = "r2dashboard:modules";
+
+/** Defends against a malformed or partial payload from the iframe/fetch without throwing. */
+function normalizeBobInvoices(raw: unknown[]): ExternalInvoiceSummary[] {
+  return raw
+    .filter(
+      (entry): entry is Record<string, unknown> =>
+        typeof entry === "object" && entry !== null,
+    )
+    .map((entry) => ({
+      id: String(entry.id ?? ""),
+      invoiceNumber: String(entry.invoiceNumber ?? ""),
+      supplierName: String(entry.supplierName ?? ""),
+      totalAmount: typeof entry.totalAmount === "number" ? entry.totalAmount : null,
+      status: entry.status === "needs_review" ? "needs_review" : "valid",
+      uploadedAt: typeof entry.uploadedAt === "string" ? entry.uploadedAt : "",
+    }));
+}
+
+/** Plain "X minutes/hours/days ago", for the one piece of state here with a real timestamp. */
+function relativeTimeFrom(iso: string): string {
+  const then = new Date(iso).getTime();
+  if (!Number.isFinite(then)) return "";
+  const minutes = Math.max(0, Math.round((Date.now() - then) / 60000));
+  if (minutes < 1) return "Just now";
+  if (minutes < 60) return `${minutes} ${minutes === 1 ? "minute" : "minutes"} ago`;
+  const hours = Math.round(minutes / 60);
+  if (hours < 24) return `${hours} ${hours === 1 ? "hour" : "hours"} ago`;
+  const days = Math.round(hours / 24);
+  return `${days} ${days === 1 ? "day" : "days"} ago`;
+}
+
+/** Local YYYY-MM-DD, for comparing an ISO timestamp against "today" without a date library. */
+function localDateKey(date: Date): string {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(
+    date.getDate(),
+  ).padStart(2, "0")}`;
+}
 
 interface PortalState {
   approvals: Approval[];
@@ -77,6 +115,8 @@ interface PortalState {
    * cookie is what authenticates the read) — never an error, just nothing to show yet.
    */
   bobReviewItems: ExternalReviewItem[];
+  /** Bob's real invoices uploaded today — what "Today's work" shows for him. */
+  bobRunsToday: number;
 
   approveRequest: (id: string) => void;
   rejectRequest: (id: string) => void;
@@ -108,7 +148,13 @@ export function PortalProvider({ children }: { children: ReactNode }) {
   const [preferences, setPreferences] = useState<NotificationPreferences>(seedPreferences);
   const [integrations] = useState<Integration[]>(seedIntegrations);
   const [modules, setModules] = useState<Module[]>(seedModules);
-  const [bobReviewItems, setBobReviewItems] = useState<ExternalReviewItem[]>([]);
+  /**
+   * Bob's invoices, of any status, read live from his own application. Everything
+   * derived from him — the review queue, today's count, recent work, notifications —
+   * comes from this one list rather than four separate fetches, so they can never
+   * disagree with each other about what his data actually says.
+   */
+  const [bobInvoices, setBobInvoices] = useState<ExternalInvoiceSummary[]>([]);
 
   /*
    * Removing or re-hiring a worker is meant to stick — a client who takes Bob off the
@@ -171,20 +217,7 @@ export function PortalProvider({ children }: { children: ReactNode }) {
         if (!res.ok) return;
         const data = await res.json();
         const invoices = Array.isArray(data.invoices) ? data.invoices : [];
-        const items: ExternalReviewItem[] = invoices
-          .filter((invoice: { status?: string }) => invoice.status === "needs_review")
-          .map((invoice: {
-            id: string;
-            invoiceNumber: string;
-            supplierName: string;
-            totalAmount: number | null;
-          }) => ({
-            id: invoice.id,
-            invoiceNumber: invoice.invoiceNumber,
-            supplierName: invoice.supplierName,
-            totalAmount: invoice.totalAmount,
-          }));
-        if (!cancelled) setBobReviewItems(items);
+        if (!cancelled) setBobInvoices(normalizeBobInvoices(invoices));
       } catch {
         // Offline, blocked, or not yet authenticated — nothing to do here.
       }
@@ -208,9 +241,9 @@ export function PortalProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     function onMessage(event: MessageEvent) {
       if (event.origin !== INVOICE_PROCESSOR_ORIGIN) return;
-      const data = event.data as { type?: string; items?: ExternalReviewItem[] } | null;
-      if (data?.type === "rare2-invoice-processor:review-queue" && Array.isArray(data.items)) {
-        setBobReviewItems(data.items);
+      const data = event.data as { type?: string; invoices?: unknown[] } | null;
+      if (data?.type === "rare2-invoice-processor:state" && Array.isArray(data.invoices)) {
+        setBobInvoices(normalizeBobInvoices(data.invoices));
       }
     }
     window.addEventListener("message", onMessage);
@@ -327,7 +360,7 @@ export function PortalProvider({ children }: { children: ReactNode }) {
     const runs = seedRuns.filter((run) => unlocked.has(run.automationId));
 
     const unlockedNames = new Set(automations.map((automation) => automation.name));
-    const recentWork = seedRecentWork.filter((item) =>
+    const seedRecentWorkVisible = seedRecentWork.filter((item) =>
       unlockedNames.has(item.automationName),
     );
 
@@ -336,15 +369,68 @@ export function PortalProvider({ children }: { children: ReactNode }) {
     );
 
     /*
+     * Everything below is derived from Bob's real invoices rather than seed data, and
+     * gated on bobIsActive the same way `unlocked` gates the seed content above — remove
+     * him and his real activity disappears from Home, Approvals and the rail together;
+     * re-hire him and it's back immediately, since the poll keeps running in the
+     * background regardless of whether he's currently on the account.
+     */
+    const visibleBobInvoices = bobIsActive ? bobInvoices : [];
+    const bobReviewItems: ExternalReviewItem[] = visibleBobInvoices
+      .filter((invoice) => invoice.status === "needs_review")
+      .map((invoice) => ({
+        id: invoice.id,
+        invoiceNumber: invoice.invoiceNumber,
+        supplierName: invoice.supplierName,
+        totalAmount: invoice.totalAmount,
+      }));
+
+    const today = localDateKey(new Date());
+    const bobRunsToday = visibleBobInvoices.filter(
+      (invoice) => invoice.uploadedAt && localDateKey(new Date(invoice.uploadedAt)) === today,
+    ).length;
+
+    const bobRecentWork: WorkItem[] = visibleBobInvoices
+      .slice()
+      .sort((a, b) => b.uploadedAt.localeCompare(a.uploadedAt))
+      .slice(0, 6)
+      .map((invoice) => ({
+        id: `bob-${invoice.id}`,
+        description:
+          invoice.status === "needs_review"
+            ? `Invoice ${invoice.invoiceNumber} flagged for review`
+            : `Invoice ${invoice.invoiceNumber} processed`,
+        automationName: "Invoice Processing",
+        status: invoice.status === "needs_review" ? "awaiting-approval" : "completed",
+        relativeTime: relativeTimeFrom(invoice.uploadedAt),
+        icon: "invoice",
+      }));
+
+    const bobNotifications: AppNotification[] = bobReviewItems.map((item) => ({
+      id: `bob-ntf-${item.id}`,
+      kind: "approval-requested",
+      title: `${item.invoiceNumber} needs review`,
+      detail: `${item.supplierName} · Bob · Invoice Processor`,
+      relativeTime: "",
+      read: false,
+      href: `/systems/mod-bob-invoice-processor?review=${encodeURIComponent(item.id)}`,
+    }));
+
+    const recentWork = [...bobRecentWork, ...seedRecentWorkVisible];
+
+    /*
      * Notifications are gated too. Without this the bell could nag about work belonging
      * to a module the client has not bought — the same failure the other surfaces are
      * filtered to prevent. A notification with no approvalId (a general one) always shows.
      */
-    const visibleNotifications = notifications.filter((notification) => {
-      if (!notification.approvalId) return true;
-      const source = approvals.find((a) => a.id === notification.approvalId);
-      return !source || unlocked.has(source.automationId);
-    });
+    const visibleNotifications = [
+      ...bobNotifications,
+      ...notifications.filter((notification) => {
+        if (!notification.approvalId) return true;
+        const source = approvals.find((a) => a.id === notification.approvalId);
+        return !source || unlocked.has(source.automationId);
+      }),
+    ];
     /*
      * Pending approvals, the urgent ones first.
      *
@@ -390,14 +476,8 @@ export function PortalProvider({ children }: { children: ReactNode }) {
       runs,
       recentWork,
       allHealthy: outstanding === 0,
-      /*
-       * Scoped to whether Bob is actually on the account, same principle as `unlocked`
-       * above: a client who has removed him should not keep seeing his invoices flagged
-       * across the sidebar, Home and Approvals. The underlying poll and message listener
-       * keep running regardless, so re-hiring him shows the current count immediately
-       * rather than waiting on the next poll.
-       */
-      bobReviewItems: bobIsActive ? bobReviewItems : [],
+      bobReviewItems,
+      bobRunsToday,
       approveRequest,
       rejectRequest,
       markNotificationRead,
@@ -412,7 +492,7 @@ export function PortalProvider({ children }: { children: ReactNode }) {
     notifications,
     integrations,
     preferences,
-    bobReviewItems,
+    bobInvoices,
     approveRequest,
     rejectRequest,
     markNotificationRead,

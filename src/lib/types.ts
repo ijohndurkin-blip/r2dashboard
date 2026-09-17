@@ -283,3 +283,18 @@ export interface ExternalReviewItem {
   supplierName: string;
   totalAmount: number | null;
 }
+
+/**
+ * One invoice, of any status, read live from Bob's application. The richer shape
+ * ExternalReviewItem is derived from — this is what actually comes back from his
+ * /api/state and his height-report broadcast, and what Home's "Today's work" and
+ * "Recent work" derive their real numbers from.
+ */
+export interface ExternalInvoiceSummary {
+  id: string;
+  invoiceNumber: string;
+  supplierName: string;
+  totalAmount: number | null;
+  status: "valid" | "needs_review";
+  uploadedAt: string;
+}
