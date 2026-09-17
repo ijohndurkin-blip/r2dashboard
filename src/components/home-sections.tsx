@@ -35,7 +35,7 @@ function workerFor(modules: Module[], automationId: string) {
  * This is the boldest element on the page, and everything around it stays quiet.
  */
 export function SystemStatusBand() {
-  const { allHealthy, pendingApprovals, automations } = usePortal();
+  const { allHealthy, pendingApprovals, automations, bobReviewItems } = usePortal();
   const running = automations.filter((automation) => automation.status !== "paused").length;
   const runsToday = automations.reduce((total, automation) => total + automation.runsToday, 0);
 
@@ -53,8 +53,15 @@ export function SystemStatusBand() {
     (automation) => automation.status === "needs-attention",
   ).length;
 
-  const approvalPhrase = `${pendingApprovals.length} ${
-    pendingApprovals.length === 1 ? "approval" : "approvals"
+  /*
+   * Bob's flagged invoices are exactly the same kind of thing as a pending approval — a
+   * decision only the client can make — so they join this count rather than getting a
+   * second headline. The card and the rail already agree on this same total (see
+   * AttentionList and app-sidebar.tsx).
+   */
+  const waitingOnClient = pendingApprovals.length + bobReviewItems.length;
+  const approvalPhrase = `${waitingOnClient} ${
+    waitingOnClient === 1 ? "approval" : "approvals"
   } waiting on you`;
   /*
    * These count AUTOMATIONS, not people. Four workers run eight automations between
@@ -76,7 +83,7 @@ export function SystemStatusBand() {
    */
   const attentionHeadline = allHealthy
     ? "Everything running normally"
-    : pendingApprovals.length > 0
+    : waitingOnClient > 0
       ? approvalPhrase
       : systemPhrase;
 
@@ -140,7 +147,7 @@ export function SystemStatusBand() {
          * only adequate tap target in the band (min-h-9), where an 18px line of text is
          * not one.
          */}
-        {pendingApprovals.length > 0 ? (
+        {waitingOnClient > 0 ? (
           <Link
             href="/approvals"
             className="-my-1.5 flex min-h-9 items-center gap-1 rounded-lg px-2 font-medium text-flag transition-colors hover:bg-flag-soft hover:text-flag"
@@ -154,11 +161,20 @@ export function SystemStatusBand() {
   );
 }
 
-/** Pending approvals, shown prominently. A few items at most, each with a way to act. */
+/**
+ * Pending approvals, shown prominently. A few items at most, each with a way to act.
+ *
+ * Bob's flagged invoices join this same list rather than getting a card of their own:
+ * they're the same kind of thing — a decision only the client can make — and Home's job
+ * is gathering that across every worker, not just the ones with seed automations behind
+ * them. Uncapped rather than sliced to 3 like the approvals: this is one worker's queue
+ * rather than portal-wide demo data, and in practice never runs deep enough to need it.
+ */
 export function AttentionList() {
-  const { pendingApprovals, activeModules } = usePortal();
+  const { pendingApprovals, activeModules, bobReviewItems } = usePortal();
   const shown = pendingApprovals.slice(0, 3);
   const remaining = pendingApprovals.length - shown.length;
+  const totalWaiting = pendingApprovals.length + bobReviewItems.length;
 
   return (
     /* h-full: shares the height of Your systems beside it. */
@@ -166,15 +182,13 @@ export function AttentionList() {
       <CardHeader
         title="Needs your attention"
         count={
-          pendingApprovals.length > 0
-            ? `${pendingApprovals.length} ${
-                pendingApprovals.length === 1 ? "approval waiting" : "approvals waiting"
-              }`
+          totalWaiting > 0
+            ? `${totalWaiting} ${totalWaiting === 1 ? "approval waiting" : "approvals waiting"}`
             : undefined
         }
       />
 
-      {shown.length === 0 ? (
+      {totalWaiting === 0 ? (
         <EmptyState
           compact
           icon={<CheckIcon className="h-5 w-5" />}
@@ -184,6 +198,34 @@ export function AttentionList() {
       ) : (
         <>
           <ul className="divide-y divide-line">
+            {bobReviewItems.map((item) => (
+              <li
+                key={item.id}
+                className="flex flex-col gap-3 px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:gap-6"
+              >
+                <div className="flex min-w-0 items-center gap-3">
+                  <WorkerAvatar moduleId="mod-bob-invoice-processor" size={32} />
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium leading-snug text-ink">
+                      {item.invoiceNumber}
+                      <span className="font-normal text-muted"> · {item.supplierName}</span>
+                    </p>
+                    <p className="mt-1.5 text-[12.5px] text-subtle">
+                      Bob · Invoice Processor
+                      {typeof item.totalAmount === "number"
+                        ? ` · £${item.totalAmount.toFixed(2)}`
+                        : ""}
+                    </p>
+                  </div>
+                </div>
+                <Link
+                  href={`/systems/mod-bob-invoice-processor?review=${encodeURIComponent(item.id)}`}
+                  className="inline-flex min-h-9 shrink-0 items-center justify-center rounded-lg border border-line-strong bg-surface px-3.5 text-[13px] font-medium text-ink transition-colors hover:bg-paper"
+                >
+                  View
+                </Link>
+              </li>
+            ))}
             {shown.map((approval) => {
               const worker = workerFor(activeModules, approval.automationId);
               return (

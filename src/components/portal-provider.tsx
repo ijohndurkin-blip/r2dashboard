@@ -300,12 +300,14 @@ export function PortalProvider({ children }: { children: ReactNode }) {
      * Summed only to answer "is anything outstanding at all?". It used to be exposed as
      * attentionCount and printed as "4 items need your attention", which disagreed with
      * every other count on Home; the band now names approvals and unhealthy systems
-     * separately, so the total stays internal to this flag.
+     * separately, so the total stays internal to this flag. Bob's live queue counts here
+     * too — Home's dot has no business saying "Everything running normally" while an
+     * actual invoice sits flagged.
      */
     const unhealthy = automations.filter(
       (automation) => automation.status === "needs-attention",
     ).length;
-    const outstanding = pendingApprovals.length + unhealthy;
+    const outstanding = pendingApprovals.length + unhealthy + bobReviewItems.length;
 
     return {
       approvals: visibleApprovals,
