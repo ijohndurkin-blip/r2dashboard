@@ -73,7 +73,7 @@ function Tile({
   const active = tone === "flag" && value > 0;
   return (
     <div
-      className={`rounded-xl border px-4 py-3.5 ${
+      className={`rounded-2xl border px-4 py-3.5 ${
         active ? "border-flag/30 bg-flag-soft" : "border-line bg-surface"
       }`}
     >
@@ -239,7 +239,7 @@ export function EmailWorkspace({
            */}
           <section
             aria-labelledby="email-share"
-            className="rounded-xl border border-line bg-surface px-5 py-4"
+            className="rounded-2xl border border-line bg-surface px-5 py-4"
           >
             <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
               <h3 id="email-share" className="text-[15px] font-semibold text-ink">
@@ -276,7 +276,7 @@ export function EmailWorkspace({
 
           <section
             aria-labelledby="email-handles"
-            className="rounded-xl border border-line bg-surface px-5 py-4"
+            className="rounded-2xl border border-line bg-surface px-5 py-4"
           >
             <h3 id="email-handles" className="text-[15px] font-semibold text-ink">
               What {personName} answers without you
@@ -306,7 +306,7 @@ export function EmailWorkspace({
           role="tabpanel"
           id={`${panelId}-conversations`}
           aria-labelledby="tab-conversations"
-          className="rounded-xl border border-line bg-surface"
+          className="rounded-2xl border border-line bg-surface"
         >
           <div className="flex flex-wrap items-start justify-between gap-4 border-b border-line px-5 py-4">
             <div className="min-w-0">

@@ -11,7 +11,8 @@ export function PageHeader({
   description,
   children,
 }: {
-  title: string;
+  /** Almost always a string. Home passes the greeting, which needs its own element. */
+  title: ReactNode;
   /** One concise sentence. Keep it to a single line of meaning. */
   description: string;
   /** Optional trailing element, e.g. a filter control. */

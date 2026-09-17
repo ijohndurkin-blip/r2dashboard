@@ -23,7 +23,7 @@ export function HireView() {
 
   if (availableModules.length === 0) {
     return (
-      <div className="rounded-xl border border-line bg-surface">
+      <div className="rounded-2xl border border-line bg-surface">
         <EmptyState
           icon={<CheckIcon className="h-5 w-5" />}
           title="You have taken everyone on."

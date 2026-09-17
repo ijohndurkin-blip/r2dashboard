@@ -89,7 +89,7 @@ export function NotificationMenu({ align = "bottom" }: { align?: "bottom" | "top
            * Height is capped against the viewport rather than a fixed 22rem, so the list
            * never presses against the bottom of a short screen.
            */
-          className={`z-50 w-[min(22rem,calc(100vw-2rem))] overflow-hidden rounded-xl border border-line bg-surface shadow-lg ${
+          className={`z-50 w-[min(22rem,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-line bg-surface shadow-lg ${
             align === "top"
               ? "fixed bottom-4 left-[260px] max-h-[min(26rem,calc(100vh-2rem))]"
               : "absolute left-0 mt-2"

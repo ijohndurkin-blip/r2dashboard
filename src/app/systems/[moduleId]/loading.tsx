@@ -9,10 +9,10 @@ export default function Loading() {
     <PageSkeleton>
       <SkeletonLine className="h-4 w-28" />
       <SkeletonLine className="h-7 w-56" />
-      <SkeletonLine className="h-32 rounded-xl" />
+      <SkeletonLine className="h-32 rounded-2xl" />
       <div className="flex flex-col gap-4">
         {Array.from({ length: 2 }).map((_, index) => (
-          <SkeletonLine key={index} className="h-40 rounded-xl" />
+          <SkeletonLine key={index} className="h-40 rounded-2xl" />
         ))}
       </div>
     </PageSkeleton>

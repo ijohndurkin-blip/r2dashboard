@@ -77,7 +77,7 @@ export function InvoiceProcessorEmbed() {
     : INVOICE_PROCESSOR_URL;
 
   return (
-    <div className="overflow-hidden rounded-xl border border-line bg-surface">
+    <div className="overflow-hidden rounded-2xl border border-line bg-surface">
       <iframe src={src} title="Rare² Invoice Processor" style={{ height }} className="block w-full" />
     </div>
   );

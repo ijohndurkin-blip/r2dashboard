@@ -52,7 +52,7 @@ export function SystemCard({
      * The detail is a dialog now, so it gets its own guaranteed width and the grid stays
      * an even 2×2 whatever is open.
      */
-    <article className="flex h-full flex-col rounded-xl border border-line bg-surface">
+    <article className="flex h-full flex-col rounded-2xl border border-line bg-surface">
       {/*
        * The figure is a column of the card, not an item in the header row. Inside the
        * header it only had that row's height, which made a whole person either a smudge
@@ -274,7 +274,7 @@ export function SystemCard({
                 aria-labelledby={titleId}
                 tabIndex={-1}
                 onClick={(event) => event.stopPropagation()}
-                className="row-measure my-auto w-full overflow-hidden rounded-xl border border-line bg-surface shadow-lg outline-none"
+                className="row-measure my-auto w-full overflow-hidden rounded-2xl border border-line bg-surface shadow-lg outline-none"
               >
                 <div className="flex items-start justify-between gap-4 border-b border-line px-5 py-4 sm:px-6">
                   <div className="flex min-w-0 items-center gap-3.5">
@@ -346,7 +346,7 @@ export function AvailableSystemCard({ module }: { module: Module }) {
   }
 
   return (
-    <article className="flex h-full flex-col rounded-xl border border-line bg-surface">
+    <article className="flex h-full flex-col rounded-2xl border border-line bg-surface">
       {/*
        * Someone you could hire, shown the way someone you already have is shown on
        * /systems: a full-length figure in its own column, anchored top-left with its head

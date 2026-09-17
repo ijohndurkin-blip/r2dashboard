@@ -3,8 +3,8 @@ import { PageSkeleton, SkeletonCard, SkeletonLine } from "@/components/skeleton"
 export default function Loading() {
   return (
     <PageSkeleton>
-      <SkeletonLine className="h-16 rounded-xl" />
-      <SkeletonLine className="h-32 rounded-xl" />
+      <SkeletonLine className="h-16 rounded-2xl" />
+      <SkeletonLine className="h-32 rounded-2xl" />
       {/* xl, matching page.tsx: at lg the skeleton split two-up while the real page
           stayed stacked, so content jumped sideways as it loaded. */}
       <div className="grid gap-6 xl:grid-cols-5">

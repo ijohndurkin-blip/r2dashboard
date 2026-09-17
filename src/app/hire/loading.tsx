@@ -7,7 +7,7 @@ export default function Loading() {
       <SkeletonLine className="h-10 w-56" />
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {Array.from({ length: 3 }).map((_, index) => (
-          <SkeletonLine key={index} className="h-72 rounded-xl" />
+          <SkeletonLine key={index} className="h-72 rounded-2xl" />
         ))}
       </div>
     </PageSkeleton>

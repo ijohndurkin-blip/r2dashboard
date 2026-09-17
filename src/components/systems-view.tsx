@@ -32,7 +32,7 @@ export function SystemsView() {
         </div>
 
         {activeModules.length === 0 ? (
-          <div className="rounded-xl border border-line bg-surface">
+          <div className="rounded-2xl border border-line bg-surface">
             <EmptyState
               icon={<BoxIcon className="h-5 w-5" />}
               title="Nobody working yet"

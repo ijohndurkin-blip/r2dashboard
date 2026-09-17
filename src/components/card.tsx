@@ -26,7 +26,7 @@ export function Card({
 }) {
   return (
     <Element
-      className={`rounded-xl border border-line bg-surface ${
+      className={`rounded-2xl border border-line bg-surface ${
         /*
          * Capped, NOT centred.
          *

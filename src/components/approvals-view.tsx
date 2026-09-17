@@ -123,7 +123,7 @@ export function ApprovalsView() {
             {tab === "pending" ? "Pending approvals" : "Completed approvals"}
           </h2>
           {shown.length === 0 ? (
-            <div className="rounded-xl border border-line bg-surface">
+            <div className="rounded-2xl border border-line bg-surface">
               <EmptyState
                 icon={<CheckIcon className="h-5 w-5" />}
                 title={

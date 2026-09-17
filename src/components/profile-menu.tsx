@@ -46,7 +46,7 @@ export function ProfileMenu({ align = "bottom" }: { align?: "bottom" | "top" }) 
           role="menu"
           aria-label="Account"
           /* Same reasoning as the notification panel: open clear of the rail, not over it. */
-          className={`absolute z-50 w-60 overflow-hidden rounded-xl border border-line bg-surface shadow-lg ${
+          className={`absolute z-50 w-60 overflow-hidden rounded-2xl border border-line bg-surface shadow-lg ${
             align === "top" ? "bottom-0 left-[calc(100%+0.75rem)]" : "left-0 mt-2"
           }`}
         >

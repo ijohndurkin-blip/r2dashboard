@@ -81,7 +81,7 @@ export function ApprovalCard({ approval }: { approval: Approval }) {
   );
 
   return (
-    <article className="rounded-xl border border-line bg-surface">
+    <article className="rounded-2xl border border-line bg-surface">
       <div className="px-5 py-5 sm:px-6">
         <div className="flex items-start gap-3.5">
           {/*

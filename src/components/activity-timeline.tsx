@@ -23,7 +23,7 @@ export function ActivityTimeline() {
 
   if (groups.length === 0) {
     return (
-      <div className="rounded-xl border border-line bg-surface">
+      <div className="rounded-2xl border border-line bg-surface">
         <EmptyState
           icon={<HistoryIcon className="h-5 w-5" />}
           title="No activity yet"
@@ -44,7 +44,7 @@ export function ActivityTimeline() {
              * the timeline spanned the full page; it now sits in a column narrower than
              * that, so the cap can never bind and would only mislead the next reader.
              */}
-            <div className="overflow-hidden rounded-xl border border-line bg-surface">
+            <div className="overflow-hidden rounded-2xl border border-line bg-surface">
               {group.items.map((run) => (
                 <ActivityRun key={run.id} run={run} />
               ))}

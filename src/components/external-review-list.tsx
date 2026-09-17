@@ -24,7 +24,7 @@ export function ExternalReviewList({ items }: { items: ExternalReviewItem[] }) {
       {items.map((item) => (
         <article
           key={item.id}
-          className="flex items-center gap-3.5 rounded-xl border border-line bg-surface px-5 py-3.5 sm:px-6"
+          className="flex items-center gap-3.5 rounded-2xl border border-line bg-surface px-5 py-3.5 sm:px-6"
         >
           <span className="relative mt-0.5 shrink-0">
             <WorkerAvatar moduleId="mod-bob-invoice-processor" size={36} />

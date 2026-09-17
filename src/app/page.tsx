@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Card, CardHeader } from "@/components/card";
+import { Greeting } from "@/components/greeting";
 import { ChevronRightIcon } from "@/components/icons";
 import { PageHeader } from "@/components/page-header";
 import {
@@ -23,15 +24,24 @@ import { RecentNotifications } from "@/components/recent-notifications";
  * from the navigation. The concrete version already lives on each card in Your systems,
  * showing that workflow's real steps.
  *
- * No greeting, no metric-card row, no chart.
+ * No metric-card row, no chart.
+ *
+ * The one addition is the greeting in place of a plain "Overview" title, on a soft
+ * brand-accent wash — the same 10% cyan tint the active rail row already carries, not a
+ * new colour. Kept to this one spot rather than spread across the page: DESIGN.md is
+ * emphatic that colour here means status, and a tint on every card would repeat the
+ * "eleven tinted surfaces" mistake it records and reverses. This is brand identity, the
+ * same exception already made for the rail and the avatars, not decoration.
  */
 export default function HomePage() {
   return (
     <div className="flex flex-col gap-8">
-      <PageHeader
-        title="Overview"
-        description="See what your Raresquared workforce is doing and anything that needs your attention."
-      />
+      <div className="rounded-2xl bg-brand-accent/5 px-5 py-5 sm:px-6 sm:py-6">
+        <PageHeader
+          title={<Greeting />}
+          description="See what your Raresquared workforce is doing and anything that needs your attention."
+        />
+      </div>
 
       <SystemStatusBand />
 

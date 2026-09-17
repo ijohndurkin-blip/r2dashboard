@@ -68,7 +68,7 @@ export function ModuleView({
     return (
       <div className="flex flex-col gap-8">
         <PageHeader title={moduleEntry.name} description={moduleEntry.description} />
-        <div className="rounded-xl border border-line bg-surface px-5 py-5 sm:px-6">
+        <div className="rounded-2xl border border-line bg-surface px-5 py-5 sm:px-6">
           <p className="max-w-prose text-sm leading-relaxed text-muted">
             This system is not on your account yet, so there is nothing to report on it.
             You can take them on from Hire workers — they start straight away.
@@ -168,7 +168,7 @@ export function ModuleView({
       {/* The status band, in Home's shape: the answer first, the metadata quiet beside it. */}
       <section
         aria-label={`${moduleEntry.personName} status`}
-        className="flex flex-col gap-3 rounded-xl border border-line bg-surface px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:gap-6 sm:px-6"
+        className="flex flex-col gap-3 rounded-2xl border border-line bg-surface px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:gap-6 sm:px-6"
       >
         <p className="flex items-center gap-2.5 text-[18px] font-semibold tracking-[-0.01em] text-ink">
           <span
@@ -253,7 +253,7 @@ export function ModuleView({
 
             {isBob ? (
               bobReviewItems.length === 0 ? (
-                <div className="rounded-xl border border-line bg-surface">
+                <div className="rounded-2xl border border-line bg-surface">
                   <EmptyState
                     compact
                     icon={<CheckIcon className="h-5 w-5" />}
@@ -265,7 +265,7 @@ export function ModuleView({
                 <ExternalReviewList items={bobReviewItems} />
               )
             ) : moduleApprovals.length === 0 ? (
-              <div className="rounded-xl border border-line bg-surface">
+              <div className="rounded-2xl border border-line bg-surface">
                 <EmptyState
                   compact
                   icon={<CheckIcon className="h-5 w-5" />}
@@ -297,7 +297,7 @@ export function ModuleView({
               Latest runs
             </h2>
             {moduleRuns.length === 0 ? (
-              <div className="rounded-xl border border-line bg-surface">
+              <div className="rounded-2xl border border-line bg-surface">
                 <EmptyState
                   icon={<HistoryIcon className="h-5 w-5" />}
                   title="No runs recorded yet"
@@ -305,7 +305,7 @@ export function ModuleView({
                 />
               </div>
             ) : (
-              <div className="overflow-hidden rounded-xl border border-line bg-surface">
+              <div className="overflow-hidden rounded-2xl border border-line bg-surface">
                 {moduleRuns.map((run) => (
                   <ActivityRun key={run.id} run={run} />
                 ))}

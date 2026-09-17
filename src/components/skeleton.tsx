@@ -24,7 +24,7 @@ export function SkeletonHeader() {
 /** A card-shaped placeholder with a configurable number of rows. */
 export function SkeletonCard({ rows = 3 }: { rows?: number }) {
   return (
-    <div className="rounded-xl border border-line bg-surface">
+    <div className="rounded-2xl border border-line bg-surface">
       <div className="border-b border-line px-5 py-4">
         <SkeletonLine className="h-4 w-32" />
       </div>

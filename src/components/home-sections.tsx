@@ -90,7 +90,7 @@ export function SystemStatusBand() {
   return (
     <section
       aria-labelledby="status-band-heading"
-      className="flex flex-col gap-3 rounded-xl border border-line bg-surface px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:gap-6 sm:px-6"
+      className="flex flex-col gap-3 rounded-2xl border border-line bg-surface px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:gap-6 sm:px-6"
     >
       {/*
        * A real heading, visually hidden.
