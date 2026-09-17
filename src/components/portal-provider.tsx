@@ -16,6 +16,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -43,6 +44,9 @@ import type {
 
 /** Where Bob's real application lives — see invoice-processor-embed.tsx for the same URL. */
 const INVOICE_PROCESSOR_ORIGIN = "https://invoices.raresquaredlabs.co.uk";
+
+/** Which workers are active vs. available to hire — the one thing here worth persisting. */
+const MODULES_STORAGE_KEY = "r2dashboard:modules";
 
 interface PortalState {
   approvals: Approval[];
@@ -84,6 +88,8 @@ interface PortalState {
    * is wired up, this is the single call site that becomes an async checkout.
    */
   purchaseModule: (id: string) => void;
+  /** Take a module off the account. It moves back to Hire workers, not deleted. */
+  removeModule: (id: string) => void;
 }
 
 const PortalContext = createContext<PortalState | null>(null);
@@ -103,6 +109,48 @@ export function PortalProvider({ children }: { children: ReactNode }) {
   const [integrations] = useState<Integration[]>(seedIntegrations);
   const [modules, setModules] = useState<Module[]>(seedModules);
   const [bobReviewItems, setBobReviewItems] = useState<ExternalReviewItem[]>([]);
+
+  /*
+   * Removing or re-hiring a worker is meant to stick — a client who takes Bob off the
+   * account shouldn't see him snap back the moment they refresh. Kept out of the initial
+   * state (rather than read in the useState initializer) so the server-rendered markup
+   * and the first client render match; this restores the saved set right after mount,
+   * one render later.
+   */
+  useEffect(() => {
+    try {
+      const stored = window.localStorage.getItem(MODULES_STORAGE_KEY);
+      // A genuine one-time sync from an external store on mount, not a derived-state
+      // effect the lint rule is meant to catch — there's no prop or render value to
+      // adjust state from, only localStorage, which useState's initializer can't reach
+      // safely without risking a server/client markup mismatch.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      if (stored) setModules(JSON.parse(stored) as Module[]);
+    } catch {
+      // Private browsing, disabled storage, or corrupted data — seed data still works.
+    }
+  }, []);
+
+  /*
+   * Skips its very first run. Without this, mount order works against itself: the
+   * restore effect above calls setModules, but that update hasn't been applied to
+   * `modules` yet by the time THIS effect runs in the same commit — so its first pass
+   * would write the untouched seed data straight over whatever was just restored,
+   * and the correction would only arrive a render later than the damage. One skipped
+   * write on mount costs nothing; every write after an actual change still lands.
+   */
+  const skippedFirstPersist = useRef(false);
+  useEffect(() => {
+    if (!skippedFirstPersist.current) {
+      skippedFirstPersist.current = true;
+      return;
+    }
+    try {
+      window.localStorage.setItem(MODULES_STORAGE_KEY, JSON.stringify(modules));
+    } catch {
+      // Nothing to persist to — the account still works for this session.
+    }
+  }, [modules]);
 
   /*
    * Polls Bob's real backend for its own live review queue. This is the one piece of
@@ -247,9 +295,27 @@ export function PortalProvider({ children }: { children: ReactNode }) {
     ]);
   }, []);
 
+  /**
+   * The reverse of purchaseModule: takes a worker off the account. They move back to
+   * Hire workers rather than being deleted — the module's own data (description,
+   * pricing, artwork) stays exactly as it was, ready to take on again.
+   */
+  const removeModule = useCallback((id: string) => {
+    setModules((current) =>
+      current.map((module) =>
+        module.id === id && module.state === "active"
+          ? { ...module, state: "available" }
+          : module,
+      ),
+    );
+  }, []);
+
   const value = useMemo<PortalState>(() => {
     const activeModules = modules.filter((module) => module.state === "active");
     const availableModules = modules.filter((module) => module.state === "available");
+    const bobIsActive = activeModules.some(
+      (module) => module.id === "mod-bob-invoice-processor",
+    );
 
     /*
      * Everything the client sees is scoped to the modules on their account. Without this
@@ -324,13 +390,21 @@ export function PortalProvider({ children }: { children: ReactNode }) {
       runs,
       recentWork,
       allHealthy: outstanding === 0,
-      bobReviewItems,
+      /*
+       * Scoped to whether Bob is actually on the account, same principle as `unlocked`
+       * above: a client who has removed him should not keep seeing his invoices flagged
+       * across the sidebar, Home and Approvals. The underlying poll and message listener
+       * keep running regardless, so re-hiring him shows the current count immediately
+       * rather than waiting on the next poll.
+       */
+      bobReviewItems: bobIsActive ? bobReviewItems : [],
       approveRequest,
       rejectRequest,
       markNotificationRead,
       markAllNotificationsRead,
       setPreference,
       purchaseModule,
+      removeModule,
     };
   }, [
     approvals,
@@ -345,6 +419,7 @@ export function PortalProvider({ children }: { children: ReactNode }) {
     markAllNotificationsRead,
     setPreference,
     purchaseModule,
+    removeModule,
   ]);
 
   return <PortalContext.Provider value={value}>{children}</PortalContext.Provider>;

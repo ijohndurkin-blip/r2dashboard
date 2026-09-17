@@ -396,113 +396,13 @@ export const modules: Module[] = [
   },
 ];
 
-export const approvals: Approval[] = [
-  {
-    id: "apr-3184",
-    title: "Reject damaged goods and request a replacement",
-    automationId: "goods-receipt-review",
-    automationName: "Goods Receipt Review",
-    reason:
-      "Eight bags of cement arrived split and the delivery note was signed for as damaged at goods-in.",
-    requestedAction:
-      "Reject the damaged bags, request a replacement delivery and hold the invoice until it arrives.",
-    context: [
-      { label: "Purchase order", value: "PO-24823" },
-      { label: "Supplier", value: "Hensall Aggregates" },
-      { label: "Delivered", value: "40 bags — rapid set cement" },
-      { label: "Damaged", value: "8 bags, split on arrival" },
-      { label: "Signed for by", value: "Goods-in, bay 2" },
-      { label: "Value affected", value: "£71.20" },
-    ],
-    submitted: "1 minute ago",
-  },
-  {
-    id: "apr-3181",
-    title: "Send purchase order update to Brantham Timber",
-    automationId: "purchase-order-matching",
-    automationName: "Purchase Order Matching",
-    reason:
-      "Raresquared found a mismatch between the delivered quantity and the original purchase order.",
-    requestedAction: "Notify the supplier and flag the order for review.",
-    context: [
-      { label: "Purchase order", value: "PO-24817" },
-      { label: "Supplier", value: "Brantham Timber" },
-      { label: "Ordered", value: "240 lengths — C24 treated timber" },
-      { label: "Delivered", value: "216 lengths" },
-      { label: "Difference", value: "24 lengths short" },
-      { label: "Order value", value: "£4,812.00" },
-    ],
-    urgent: true,
-    submitted: "3 minutes ago",
-  },
-  {
-    id: "apr-3179",
-    title: "Approve invoice for payment",
-    automationId: "invoice-processing",
-    automationName: "Invoice Processing",
-    reason:
-      "This invoice is £340 higher than the order it matches, which is above the amount Raresquared can approve on its own.",
-    requestedAction: "Post the invoice to Xero and schedule it for the next payment run.",
-    context: [
-      { label: "Invoice", value: "INV-99214" },
-      { label: "Supplier", value: "Hensall Aggregates" },
-      { label: "Invoice total", value: "£3,180.00" },
-      { label: "Order total", value: "£2,840.00" },
-      { label: "Difference", value: "£340.00 — delivery surcharge" },
-      { label: "Due", value: "28 September 2026" },
-    ],
-    urgent: true,
-    submitted: "48 minutes ago",
-  },
-  {
-    id: "apr-3168",
-    title: "Confirm revised delivery date",
-    automationId: "supplier-communication",
-    automationName: "Supplier Communication",
-    reason:
-      "Kesgrave Fixings replied offering a later delivery date, and the order is needed for a booked job.",
-    requestedAction: "Accept the revised date and tell the site team.",
-    context: [
-      { label: "Purchase order", value: "PO-24790" },
-      { label: "Supplier", value: "Kesgrave Fixings" },
-      { label: "Promised", value: "16 September 2026" },
-      { label: "Now offered", value: "23 September 2026" },
-      { label: "Affects", value: "Marsh Lane site — booked 24 September" },
-    ],
-    submitted: "Yesterday at 16:20",
-  },
-  {
-    id: "apr-3152",
-    title: "Write off short delivery",
-    automationId: "goods-receipt-review",
-    automationName: "Goods Receipt Review",
-    reason:
-      "Two bags of sand were recorded as damaged on arrival and the supplier agreed a credit.",
-    requestedAction: "Record the credit against the order and close the receipt.",
-    context: [
-      { label: "Purchase order", value: "PO-24702" },
-      { label: "Supplier", value: "Hensall Aggregates" },
-      { label: "Credit agreed", value: "£38.40" },
-    ],
-    submitted: "Monday at 09:12",
-    resolution: { outcome: "approved", when: "Monday at 09:40" },
-  },
-  {
-    id: "apr-3149",
-    title: "Send chase email to Verity Steel",
-    automationId: "supplier-communication",
-    automationName: "Supplier Communication",
-    reason: "The order was four working days overdue with no reply to the first message.",
-    requestedAction: "Send a second chase email and copy the purchasing team.",
-    context: [
-      { label: "Purchase order", value: "PO-24688" },
-      { label: "Supplier", value: "Verity Steel" },
-      { label: "Days overdue", value: "4 working days" },
-    ],
-    submitted: "Friday at 14:05",
-    resolution: { outcome: "rejected", when: "Friday at 15:30" },
-  },
-];
+/*
+ * Empty rather than seeded demo approvals. Those reset to "pending" on every refresh —
+ * this is client-side state with nothing behind it to persist an "approved" — which read
+ * as broken rather than as a demo limitation. Bob's real ones (bobReviewItems in
+ * portal-provider.tsx) are the only approvals actually backed by anything.
+ */
+export const approvals: Approval[] = [];
 
 export const runs: Run[] = [
   {
@@ -705,16 +605,6 @@ export const recentWork: WorkItem[] = [
 
 export const notifications: AppNotification[] = [
   {
-    id: "ntf-1",
-    kind: "approval-requested",
-    title: "Approval needed on PO-24817",
-    detail: "Purchase Order Matching found a short delivery from Brantham Timber.",
-    relativeTime: "3 minutes ago",
-    read: false,
-    href: "/approvals",
-    approvalId: "apr-3181",
-  },
-  {
     id: "ntf-2",
     kind: "automation-failed",
     title: "Invoice Processing hit a problem",
@@ -722,16 +612,6 @@ export const notifications: AppNotification[] = [
     relativeTime: "6 minutes ago",
     read: false,
     href: "/activity",
-  },
-  {
-    id: "ntf-3",
-    kind: "approval-requested",
-    title: "Invoice held for approval",
-    detail: "INV-99214 from Hensall Aggregates is £340 above its order.",
-    relativeTime: "48 minutes ago",
-    read: false,
-    href: "/approvals",
-    approvalId: "apr-3179",
   },
   {
     id: "ntf-4",

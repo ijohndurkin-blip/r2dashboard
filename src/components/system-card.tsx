@@ -30,8 +30,10 @@ export function SystemCard({
   /** Runs belonging to those automations, newest first. */
   runs: Run[];
 }) {
+  const { removeModule } = usePortal();
   const { open, openDialog, close, panelRef, triggerRef } = useDialog<HTMLDivElement>();
   const titleId = `system-${module.id}-title`;
+  const [removing, setRemoving] = useState(false);
 
   const runsToday = automations.reduce((total, a) => total + a.runsToday, 0);
   const needsAttention = automations.some((a) => a.status === "needs-attention");
@@ -137,42 +139,87 @@ export function SystemCard({
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-3 border-t border-line px-5 py-3 sm:px-6">
-        <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[12.5px] text-muted">
-          <ClockIcon className="h-3.5 w-3.5 text-subtle" />
-          {lastRun ? `Last run ${lastRun.toLowerCase()}` : "Ready and waiting"}
-          <span aria-hidden="true" className="text-subtle">
-            ·
-          </span>
-          <span className="tabular">£{module.monthlyPrice}/month</span>
-          {/* Since-when was recorded in the data but never shown. */}
-          {module.addedOn ? (
-            <>
+        {removing ? (
+          /*
+           * Swaps the whole footer for a confirmation, the same inline pattern
+           * AvailableSystemCard uses for "Take X on" — one row, no separate dialog for
+           * what is a single reversible toggle.
+           */
+          <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-[13px] leading-relaxed text-ink">
+              Remove {module.personName} from your account? They&rsquo;ll move back to Hire
+              workers, ready to take on again.
+            </p>
+            <div className="flex shrink-0 gap-2.5">
+              <button
+                type="button"
+                onClick={() => {
+                  removeModule(module.id);
+                  setRemoving(false);
+                }}
+                className="inline-flex min-h-9 items-center justify-center rounded-lg bg-fault px-3.5 text-[13px] font-medium text-surface transition-opacity hover:opacity-90"
+              >
+                Remove
+              </button>
+              <button
+                type="button"
+                onClick={() => setRemoving(false)}
+                className="inline-flex min-h-9 items-center justify-center rounded-lg border border-line-strong bg-surface px-3.5 text-[13px] font-medium text-ink transition-colors hover:bg-paper"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        ) : (
+          <>
+            <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[12.5px] text-muted">
+              <ClockIcon className="h-3.5 w-3.5 text-subtle" />
+              {lastRun ? `Last run ${lastRun.toLowerCase()}` : "Ready and waiting"}
               <span aria-hidden="true" className="text-subtle">
                 ·
               </span>
-              <span>Added {module.addedOn}</span>
-            </>
-          ) : null}
-        </p>
+              <span className="tabular">£{module.monthlyPrice}/month</span>
+              {/* Since-when was recorded in the data but never shown. */}
+              {module.addedOn ? (
+                <>
+                  <span aria-hidden="true" className="text-subtle">
+                    ·
+                  </span>
+                  <span>Added {module.addedOn}</span>
+                </>
+              ) : null}
+            </p>
 
-        {/*
-         * aria-haspopup="dialog", not aria-expanded: the button no longer controls an
-         * inline region that grows below it, so "expanded" would describe nothing.
-         *
-         * No chevron. The original pointed down to signal a panel unfolding in place; a
-         * right-pointing one replaced it when this became a dialog, but it was decoration
-         * — the label already says what the button does, and haspopup tells assistive
-         * tech a dialog is coming.
-         */}
-        <button
-          ref={triggerRef}
-          type="button"
-          onClick={openDialog}
-          aria-haspopup="dialog"
-          className="flex min-h-9 items-center rounded-lg px-2.5 text-[13px] font-medium text-ink transition-colors hover:bg-paper"
-        >
-          View {module.personName}
-        </button>
+            <div className="flex items-center gap-1">
+              <button
+                type="button"
+                onClick={() => setRemoving(true)}
+                className="inline-flex min-h-9 items-center rounded-lg border border-fault/40 bg-surface px-3 text-[13px] font-medium text-fault transition-colors hover:bg-fault-soft"
+              >
+                Remove
+              </button>
+              {/*
+               * aria-haspopup="dialog", not aria-expanded: the button no longer controls
+               * an inline region that grows below it, so "expanded" would describe
+               * nothing.
+               *
+               * No chevron. The original pointed down to signal a panel unfolding in
+               * place; a right-pointing one replaced it when this became a dialog, but it
+               * was decoration — the label already says what the button does, and
+               * haspopup tells assistive tech a dialog is coming.
+               */}
+              <button
+                ref={triggerRef}
+                type="button"
+                onClick={openDialog}
+                aria-haspopup="dialog"
+                className="flex min-h-9 items-center rounded-lg px-2.5 text-[13px] font-medium text-ink transition-colors hover:bg-paper"
+              >
+                View {module.personName}
+              </button>
+            </div>
+          </>
+        )}
       </div>
 
       {open
