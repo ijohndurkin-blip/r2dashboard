@@ -330,7 +330,7 @@ function IntegrationsSection() {
                 </a>
               ) : (
                 <a
-                  href="https://invoices.raresquaredlabs.co.uk/api/connectors/google/start"
+                  href="https://invoices.raresquaredlabs.co.uk/api/connectors/google/start?returnTo=dashboard"
                   className="inline-flex min-h-9 items-center justify-center rounded-lg border border-line-strong bg-surface px-3 text-[12.5px] font-medium text-ink transition-colors hover:bg-paper"
                 >
                   Connect
