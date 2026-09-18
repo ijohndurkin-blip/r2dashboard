@@ -285,12 +285,61 @@ function SecuritySection() {
 }
 
 function IntegrationsSection() {
-  const { integrations } = usePortal();
+  const { integrations, googleDriveConnector } = usePortal();
 
   return (
     <Card measured>
       <CardHeader title="Integrations" />
       <ul className="divide-y divide-line">
+        {/*
+         * The one integration here that's real. It sits above the rest — same row shape,
+         * so it reads as one list rather than calling attention to which entries work —
+         * but it's sourced live from Bob's backend (see portal-provider.tsx), not seed
+         * data, and its Connect/Manage links actually do something.
+         */}
+        <li className="px-5 py-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
+            <div className="flex min-w-0 items-start gap-3.5">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-line bg-surface">
+                <ServiceIcon id="google-drive" className="h-5 w-5" />
+              </span>
+              <div className="min-w-0">
+                <p className="text-sm font-medium text-ink">Google Drive</p>
+                <p className="mt-0.5 text-[13px] leading-relaxed text-muted">
+                  Keeps an invoice spreadsheet in your Drive automatically up to date.
+                </p>
+                {googleDriveConnector?.connected && googleDriveConnector.folderName ? (
+                  <p className="mt-1 text-[12.5px] text-subtle">
+                    Syncing to {googleDriveConnector.folderName}
+                  </p>
+                ) : null}
+              </div>
+            </div>
+
+            <div className="flex shrink-0 items-center gap-3 pl-12 sm:pl-0">
+              <StatusIndicator
+                status={googleDriveConnector?.connected ? "connected" : "not-connected"}
+                colored
+              />
+              {googleDriveConnector?.connected ? (
+                <a
+                  href="https://invoices.raresquaredlabs.co.uk/?openExport=sheets"
+                  className="inline-flex min-h-9 items-center justify-center rounded-lg border border-line-strong bg-surface px-3 text-[12.5px] font-medium text-ink transition-colors hover:bg-paper"
+                >
+                  Manage
+                </a>
+              ) : (
+                <a
+                  href="https://invoices.raresquaredlabs.co.uk/api/connectors/google/start"
+                  className="inline-flex min-h-9 items-center justify-center rounded-lg border border-line-strong bg-surface px-3 text-[12.5px] font-medium text-ink transition-colors hover:bg-paper"
+                >
+                  Connect
+                </a>
+              )}
+            </div>
+          </div>
+        </li>
+
         {integrations.map((integration) => (
           <li key={integration.id} className="px-5 py-4">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-6">

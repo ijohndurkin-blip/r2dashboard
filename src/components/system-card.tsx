@@ -6,7 +6,7 @@ import { ModuleDetail } from "./module-detail";
 import { StatusIndicator } from "./status-indicator";
 import { WorkerAvatar } from "./worker-avatar";
 import { WorkerFigure, hasFigure } from "./worker-figure";
-import { CheckIcon, CloseIcon, ClockIcon, PlusIcon } from "./icons";
+import { CheckIcon, CloseIcon, ClockIcon, PlusIcon, ServiceIcon } from "./icons";
 import { usePortal } from "./portal-provider";
 import { useDialog } from "./use-dialog";
 import type { Automation, Module, Run } from "@/lib/types";
@@ -30,7 +30,7 @@ export function SystemCard({
   /** Runs belonging to those automations, newest first. */
   runs: Run[];
 }) {
-  const { removeModule, bobReviewItems, bobRunsToday } = usePortal();
+  const { removeModule, bobReviewItems, bobRunsToday, googleDriveConnector } = usePortal();
   const { open, openDialog, close, panelRef, triggerRef } = useDialog<HTMLDivElement>();
   const titleId = `system-${module.id}-title`;
   const [removing, setRemoving] = useState(false);
@@ -191,6 +191,22 @@ export function SystemCard({
                     ·
                   </span>
                   <span>Added {module.addedOn}</span>
+                </>
+              ) : null}
+              {/*
+               * The one connector icon that means something today — Bob is the one
+               * worker with a real Google Drive connection behind him (see Settings).
+               * Any future worker that supports the same connector gets this same row.
+               */}
+              {isBob && googleDriveConnector?.connected ? (
+                <>
+                  <span aria-hidden="true" className="text-subtle">
+                    ·
+                  </span>
+                  <span className="inline-flex items-center gap-1">
+                    <ServiceIcon id="google-drive" className="h-3.5 w-3.5" />
+                    Synced to Google Drive
+                  </span>
                 </>
               ) : null}
             </p>

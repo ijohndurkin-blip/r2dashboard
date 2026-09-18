@@ -8,7 +8,7 @@ import { EmptyState } from "./empty-state";
 import { ExternalReviewList } from "./external-review-list";
 import { PageHeader } from "./page-header";
 import { WorkerAvatar } from "./worker-avatar";
-import { CheckIcon, HistoryIcon } from "./icons";
+import { CheckIcon, HistoryIcon, ServiceIcon } from "./icons";
 import { usePortal } from "./portal-provider";
 
 /**
@@ -50,6 +50,7 @@ export function ModuleView({
     pendingApprovals,
     bobReviewItems,
     bobRunsToday,
+    googleDriveConnector,
   } = usePortal();
 
   const moduleEntry = modules.find((entry) => entry.id === moduleId);
@@ -193,6 +194,12 @@ export function ModuleView({
           </span>
           {lastRun ? <span>Last run {lastRun.toLowerCase()}</span> : null}
           <span className="tabular">£{moduleEntry.monthlyPrice}/month</span>
+          {isBob && googleDriveConnector?.connected ? (
+            <span className="inline-flex items-center gap-1">
+              <ServiceIcon id="google-drive" className="h-3.5 w-3.5" />
+              Synced to Google Drive
+            </span>
+          ) : null}
         </div>
       </section>
 

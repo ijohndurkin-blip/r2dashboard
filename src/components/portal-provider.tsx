@@ -117,6 +117,8 @@ interface PortalState {
   bobReviewItems: ExternalReviewItem[];
   /** Bob's real invoices uploaded today — what "Today's work" shows for him. */
   bobRunsToday: number;
+  /** The account's real Google Drive connection, or null while unchecked/unavailable. */
+  googleDriveConnector: { connected: boolean; folderName?: string } | null;
 
   approveRequest: (id: string) => void;
   rejectRequest: (id: string) => void;
@@ -155,6 +157,18 @@ export function PortalProvider({ children }: { children: ReactNode }) {
    * disagree with each other about what his data actually says.
    */
   const [bobInvoices, setBobInvoices] = useState<ExternalInvoiceSummary[]>([]);
+
+  /**
+   * The one real integration in Settings, read live from Bob's backend the same way his
+   * invoices are — this isn't hire/unhire demo state, it's a genuine Google account
+   * connection that outlives whichever local module toggle happens to be on.
+   * `null` means "not checked yet" (or the request failed), which reads as "not
+   * connected" rather than a broken state.
+   */
+  const [googleDriveConnector, setGoogleDriveConnector] = useState<{
+    connected: boolean;
+    folderName?: string;
+  } | null>(null);
 
   /*
    * Removing or re-hiring a worker is meant to stick — a client who takes Bob off the
@@ -218,6 +232,37 @@ export function PortalProvider({ children }: { children: ReactNode }) {
         const data = await res.json();
         const invoices = Array.isArray(data.invoices) ? data.invoices : [];
         if (!cancelled) setBobInvoices(normalizeBobInvoices(invoices));
+      } catch {
+        // Offline, blocked, or not yet authenticated — nothing to do here.
+      }
+    }
+    poll();
+    const timer = window.setInterval(poll, 60000);
+    return () => {
+      cancelled = true;
+      window.clearInterval(timer);
+    };
+  }, []);
+
+  /**
+   * Same idea, same origin, same "fail silently" rule — whether Google Drive is
+   * connected for this account, read from Bob's backend since that's currently the only
+   * place a connection can be stored (see cloud/app.ts's user_connectors table).
+   */
+  useEffect(() => {
+    let cancelled = false;
+    async function poll() {
+      try {
+        const res = await fetch(`${INVOICE_PROCESSOR_ORIGIN}/api/connectors`, {
+          credentials: "include",
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+        const google = Array.isArray(data.connectors)
+          ? data.connectors.find((c: { provider?: string }) => c.provider === "google_drive")
+          : null;
+        if (!cancelled && google)
+          setGoogleDriveConnector({ connected: Boolean(google.connected), folderName: google.folderName });
       } catch {
         // Offline, blocked, or not yet authenticated — nothing to do here.
       }
@@ -478,6 +523,7 @@ export function PortalProvider({ children }: { children: ReactNode }) {
       allHealthy: outstanding === 0,
       bobReviewItems,
       bobRunsToday,
+      googleDriveConnector,
       approveRequest,
       rejectRequest,
       markNotificationRead,
@@ -493,6 +539,7 @@ export function PortalProvider({ children }: { children: ReactNode }) {
     integrations,
     preferences,
     bobInvoices,
+    googleDriveConnector,
     approveRequest,
     rejectRequest,
     markNotificationRead,
