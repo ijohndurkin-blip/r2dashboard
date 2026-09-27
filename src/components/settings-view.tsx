@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { Card, CardHeader } from "./card";
 import { SupportCard } from "./support-card";
 import { StatusIndicator } from "./status-indicator";
@@ -322,12 +323,15 @@ function IntegrationsSection() {
                 colored
               />
               {googleDriveConnector?.connected ? (
-                <a
-                  href="https://invoices.raresquaredlabs.co.uk/?openExport=sheets"
+                // Opens the app's Google Sheets settings inside Bob's page (the embed
+                // passes ?openExport=sheets through to the iframe), so managing or
+                // disconnecting stays within the portal rather than leaving it.
+                <Link
+                  href="/systems/mod-bob-invoice-processor?openExport=sheets"
                   className="inline-flex min-h-9 items-center justify-center rounded-lg border border-line-strong bg-surface px-3 text-[12.5px] font-medium text-ink transition-colors hover:bg-paper"
                 >
                   Manage
-                </a>
+                </Link>
               ) : (
                 <a
                   href="https://invoices.raresquaredlabs.co.uk/api/connectors/google/start?returnTo=dashboard"

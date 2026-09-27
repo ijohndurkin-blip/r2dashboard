@@ -48,12 +48,14 @@ export function InvoiceProcessorEmbed() {
   const pathname = usePathname();
 
   /*
-   * A link elsewhere in the portal (the Approvals page, or this same page's own "Waiting
-   * on you" list) can send someone here with ?review=<id> to open one invoice directly,
-   * instead of just the app's front page.
+   * A link elsewhere in the portal can send someone here with a deep link into the app:
+   * ?review=<id> (the Approvals page, or this same page's own "Waiting on you" list) opens
+   * one invoice directly, and ?openExport=sheets (Settings' Google Drive "Manage") opens
+   * the app's Google Sheets settings — inside this frame, rather than taking over the
+   * whole window.
    *
    * Kept as state rather than read fresh from searchParams on every render: once the
-   * iframe has loaded the review URL, changing its `src` back to the bare URL would
+   * iframe has loaded the deep link, changing its `src` back to the bare URL would
    * reload it and throw away whatever the deep link just opened. Stripping the query
    * param from OUR OWN address bar (in the effect below) must not do that.
    *
@@ -63,18 +65,21 @@ export function InvoiceProcessorEmbed() {
    * differs, set it right here rather than scheduling a second render to do it.
    */
   const incomingReviewId = searchParams.get("review");
-  const [reviewId, setReviewId] = useState<string | null>(null);
-  if (incomingReviewId && incomingReviewId !== reviewId) {
-    setReviewId(incomingReviewId);
+  const incomingDeepLink = incomingReviewId
+    ? `?review=${encodeURIComponent(incomingReviewId)}`
+    : searchParams.get("openExport") === "sheets"
+      ? "?openExport=sheets"
+      : null;
+  const [deepLink, setDeepLink] = useState<string | null>(null);
+  if (incomingDeepLink && incomingDeepLink !== deepLink) {
+    setDeepLink(incomingDeepLink);
   }
 
   useEffect(() => {
-    if (reviewId) router.replace(pathname);
-  }, [reviewId, router, pathname]);
+    if (deepLink) router.replace(pathname);
+  }, [deepLink, router, pathname]);
 
-  const src = reviewId
-    ? `${INVOICE_PROCESSOR_URL}?review=${encodeURIComponent(reviewId)}`
-    : INVOICE_PROCESSOR_URL;
+  const src = deepLink ? `${INVOICE_PROCESSOR_URL}${deepLink}` : INVOICE_PROCESSOR_URL;
 
   return (
     <div className="overflow-hidden rounded-2xl border border-line bg-surface">
