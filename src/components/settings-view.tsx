@@ -6,8 +6,10 @@ import { SupportCard } from "./support-card";
 import { StatusIndicator } from "./status-indicator";
 import { usePortal } from "./portal-provider";
 import { ServiceIcon } from "./icons";
+import { useTheme } from "./use-theme";
 import { account, activeSessions, company } from "@/lib/data";
 import type { NotificationPreferences } from "@/lib/types";
+import type { Theme } from "@/lib/theme";
 
 /**
  * Settings, in the order a client thinks about them: who I am, who we are, what I get
@@ -52,6 +54,7 @@ export function SettingsView() {
         <YourDetailsSection />
         <IntegrationsSection />
         <NotificationsSection />
+        <AppearanceSection />
       </div>
 
       {/*
@@ -202,6 +205,101 @@ function Toggle({
         />
       </span>
     </label>
+  );
+}
+
+const themeOptions: { value: Theme; label: string; description: string }[] = [
+  {
+    value: "classic",
+    label: "Classic",
+    description: "Clean white panels on paper — the original look.",
+  },
+  {
+    value: "glass",
+    label: "Glass",
+    description: "Frosted, see-through panels over a soft blue background.",
+  },
+];
+
+/**
+ * A miniature of each look, drawn with fixed colours (not the theme tokens) so both
+ * previews look the same whichever theme is currently on.
+ */
+function ThemePreview({ theme }: { theme: Theme }) {
+  const glass = theme === "glass";
+  return (
+    <span
+      aria-hidden="true"
+      className={`flex h-20 gap-1.5 overflow-hidden rounded-lg p-1.5 ${
+        glass
+          ? "bg-[radial-gradient(ellipse_at_0%_100%,rgb(76_106_240/0.55),transparent_70%),linear-gradient(165deg,#f1f3fb,#d8def6)]"
+          : "border border-[#e7e7e4] bg-[#fbfbfa]"
+      }`}
+    >
+      <span
+        className={`w-1/4 rounded-md ${
+          glass
+            ? "border border-white/70 bg-white/60 shadow-[0_6px_14px_-8px_rgb(30_50_140/0.35)]"
+            : "border border-[#e7e7e4] bg-white"
+        }`}
+      />
+      <span className="flex flex-1 flex-col gap-1.5">
+        {[0, 1].map((row) => (
+          <span
+            key={row}
+            className={`flex-1 rounded-md ${
+              glass
+                ? "border border-white/70 bg-white/50 shadow-[0_6px_14px_-8px_rgb(30_50_140/0.35)]"
+                : "border border-[#e7e7e4] bg-white"
+            }`}
+          />
+        ))}
+      </span>
+    </span>
+  );
+}
+
+/** Classic or Glass. Saved in this browser and applied straight away. */
+function AppearanceSection() {
+  const [theme, setTheme] = useTheme();
+
+  return (
+    <Card measured>
+      <CardHeader title="Appearance" />
+      <fieldset className="grid gap-3 p-5 sm:grid-cols-2">
+        <legend className="sr-only">Dashboard look</legend>
+        {themeOptions.map((option) => {
+          const selected = theme === option.value;
+          return (
+            <label
+              key={option.value}
+              className={`cursor-pointer rounded-xl border p-3 transition-colors has-[input:focus-visible]:outline-2 has-[input:focus-visible]:outline-offset-2 has-[input:focus-visible]:outline-ink ${
+                selected ? "border-ink" : "border-line-strong hover:border-ink/40"
+              }`}
+            >
+              <input
+                type="radio"
+                name="theme"
+                value={option.value}
+                checked={selected}
+                onChange={() => setTheme(option.value)}
+                className="sr-only"
+              />
+              <ThemePreview theme={option.value} />
+              <span className="mt-3 flex items-center justify-between gap-3">
+                <span className="text-sm font-medium text-ink">{option.label}</span>
+                {selected ? (
+                  <span className="text-[12.5px] font-medium text-signal">In use</span>
+                ) : null}
+              </span>
+              <span className="mt-0.5 block text-[13px] leading-relaxed text-muted">
+                {option.description}
+              </span>
+            </label>
+          );
+        })}
+      </fieldset>
+    </Card>
   );
 }
 

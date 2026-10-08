@@ -35,6 +35,25 @@ Base is a cool paper white with true-neutral ink, so the one accent does all the
 Restraint rule: green and amber appear **only** as status. Never as decoration, never a gradient.
 No purple, no blue accent anywhere — that is the generic automation-SaaS tell.
 
+## Glass theme (opt-in)
+The client asked for a second look, modelled on their partner's dashboard: frosted,
+translucent panels over a soft blue gradient. It is a switchable theme, not a redesign —
+**Classic stays the default** and is the design every rule above describes.
+
+- Chosen in Settings → Appearance (Classic / Glass) or the account menu's "Glass look"
+  switch. Saved per browser (`localStorage` key `r2dashboard:theme`), applied by an inline
+  script in `<head>` before first paint (`src/lib/theme.ts`), so there is no flash.
+- Every glass rule lives at the end of `globals.css`, scoped to `html[data-theme="glass"]`.
+  Classic was verified pixel-identical to the pre-theme build on seven pages.
+- The "no gradient, no blue, shadows only on floating layers" rules above are deliberately
+  relaxed **inside the glass theme only**. Status colours keep their meaning; the status
+  green is one shade darker there for contrast.
+- Contrast is re-audited per theme: every text element on seven pages, measured against
+  the pixels actually behind it. Both themes pass 4.5:1 (3:1 for large text).
+- `surface` is not redefined in glass: it is also the white text on filled badges and the
+  switch knobs. Panels become translucent through `.bg-surface` instead.
+- The embedded invoice app is not themed; it keeps its own styling.
+
 ## Logo
 The supplied lockup ships at `public/raresquared-logo.png` (261×85 RGBA) and is rendered
 through `next/image` at 26px tall with its intrinsic dimensions declared, so the header

@@ -418,7 +418,7 @@ export function AppSidebar() {
        * the <nav> instead — the logo block and account footer are fixed height, so the
        * nav list is the only part that can overflow, and clipping it is harmless.
        */}
-      <aside className="fixed left-0 top-0 z-40 hidden h-screen w-[248px] border-r border-line bg-surface lg:block">
+      <aside className="app-rail fixed left-0 top-0 z-40 hidden h-screen w-[248px] border-r border-line bg-surface lg:block">
         <RailContents />
       </aside>
 
@@ -452,7 +452,7 @@ export function AppSidebar() {
            */}
           <div
             id="mobile-rail"
-            className="absolute inset-y-0 left-0 w-[288px] max-w-[85vw] border-r border-line bg-surface"
+            className="app-drawer absolute inset-y-0 left-0 w-[288px] max-w-[85vw] border-r border-line bg-surface"
           >
             <button
               type="button"

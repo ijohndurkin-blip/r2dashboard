@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { account } from "@/lib/data";
 import { useDismissable } from "./use-dismissable";
+import { useTheme } from "./use-theme";
 
 /**
  * The single account control in the portal.
@@ -12,6 +13,8 @@ import { useDismissable } from "./use-dismissable";
  */
 export function ProfileMenu({ align = "bottom" }: { align?: "bottom" | "top" }) {
   const { open, toggle, close, containerRef, triggerRef } = useDismissable();
+  const [theme, setTheme] = useTheme();
+  const glass = theme === "glass";
 
   return (
     <div ref={containerRef} className="relative min-w-0 flex-1">
@@ -67,6 +70,31 @@ export function ProfileMenu({ align = "bottom" }: { align?: "bottom" | "top" }) 
             >
               Account settings
             </Link>
+            {/*
+             * A quick switch between the two looks (also in Settings → Appearance). The
+             * menu stays open so the change can be seen and undone in one place.
+             */}
+            <button
+              type="button"
+              role="menuitemcheckbox"
+              aria-checked={glass}
+              onClick={() => setTheme(glass ? "classic" : "glass")}
+              className="flex w-full items-center justify-between gap-3 px-4 py-2 text-left text-[13.5px] text-ink transition-colors hover:bg-paper"
+            >
+              Glass look
+              <span
+                aria-hidden="true"
+                className={`relative h-5 w-8 shrink-0 rounded-full transition-colors ${
+                  glass ? "bg-signal" : "bg-line-strong"
+                }`}
+              >
+                <span
+                  className={`absolute left-0.5 top-0.5 h-4 w-4 rounded-full bg-surface shadow-xs transition-transform ${
+                    glass ? "translate-x-3" : ""
+                  }`}
+                />
+              </span>
+            </button>
           </div>
           <div className="border-t border-line py-1">
             <button

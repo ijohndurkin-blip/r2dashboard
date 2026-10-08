@@ -145,3 +145,130 @@
     scroll-behavior: auto !important;
   }
 }
+
+/*
+ * ─── Glass theme ──────────────────────────────────────────────────────────────────
+ *
+ * Opt-in (Settings → Appearance, or the account menu), modelled on the partner
+ * dashboard: frosted, translucent panels floating over a soft blue gradient. Every rule
+ * here is scoped to html[data-theme="glass"], so the classic look above is untouched.
+ * These rules are deliberately unlayered, so they win over Tailwind's utility layer.
+ *
+ * Colours that carry meaning keep their hue (ink, status green/amber/red, brand navy);
+ * only the status green is a shade darker, see below.
+ * `surface` itself is NOT redefined: it is also the white text on filled badges and
+ * avatars (text-surface) and the switch knobs, which must stay solid.
+ */
+html[data-theme="glass"] {
+  /* Hover fills, the active rail row and quiet chips: a light frost rather than paper. */
+  --color-paper: rgb(255 255 255 / 0.42);
+  /* Panel edges read as a bright rim of light, the way glass catches it. */
+  --color-line: rgb(255 255 255 / 0.72);
+  /* Outlined buttons and the switch track keep a visible, darker edge on glass. */
+  --color-line-strong: rgb(15 23 42 / 0.22);
+  /*
+   * The grey texts are a step darker than classic: over the blue glow behind the rail
+   * the classic `subtle` (#6d737d) fell under the 4.5:1 body-text minimum.
+   */
+  --color-muted: #4b5260;
+  --color-subtle: #555b66;
+  --color-nav: #3b404a;
+  /*
+   * "Connected", "On", "In use": #15803d measured 4.0–4.48:1 on the blue-tinted panels,
+   * under the 4.5:1 minimum. One shade darker clears it everywhere (contrast audit of
+   * every text element on seven pages).
+   */
+  --color-signal: #11692f;
+
+  --glass-panel: rgb(255 255 255 / 0.52);
+  --glass-rail: rgb(255 255 255 / 0.62);
+  --glass-float: rgb(255 255 255 / 0.88);
+  --glass-shadow: 0 12px 32px -14px rgb(30 50 140 / 0.22), inset 0 1px 0 rgb(255 255 255 / 0.85);
+}
+
+/*
+ * On <html>, not <body>, so the reserved scrollbar gutter (scrollbar-gutter: stable)
+ * shares the gradient instead of showing a flat strip down the right edge.
+ */
+html[data-theme="glass"] {
+  background-color: #d9e0f7;
+  background-image:
+    radial-gradient(ellipse 60% 65% at 0% 100%, rgb(70 100 240 / 0.55), transparent 70%),
+    radial-gradient(ellipse 50% 55% at 100% 0%, rgb(190 180 250 / 0.6), transparent 70%),
+    radial-gradient(ellipse 55% 50% at 75% 85%, rgb(130 165 245 / 0.45), transparent 70%),
+    linear-gradient(165deg, #eceffb 0%, #dce3f8 50%, #ccd5f5 100%);
+  background-attachment: fixed;
+}
+
+html[data-theme="glass"] body {
+  background: transparent;
+}
+
+/* Panels, buttons and fields: see-through white. Round things (knobs, discs) stay solid. */
+html[data-theme="glass"] .bg-surface:not(.rounded-full) {
+  background-color: var(--glass-panel);
+}
+
+/* The frosted blur and soft lift, on the large panels only. */
+html[data-theme="glass"] .rounded-2xl.bg-surface,
+html[data-theme="glass"] .app-rail,
+html[data-theme="glass"] .app-drawer {
+  -webkit-backdrop-filter: blur(22px) saturate(1.5);
+  backdrop-filter: blur(22px) saturate(1.5);
+  box-shadow: var(--glass-shadow);
+}
+
+/* Menus and dialogs float over busy content: nearly opaque, so their text stays crisp. */
+html[data-theme="glass"] .bg-surface.shadow-lg,
+html[data-theme="glass"] .app-drawer {
+  background-color: var(--glass-float);
+}
+
+/* The mobile top bar. */
+html[data-theme="glass"] .bg-surface\/95 {
+  background-color: rgb(255 255 255 / 0.6);
+  -webkit-backdrop-filter: blur(16px) saturate(1.5);
+  backdrop-filter: blur(16px) saturate(1.5);
+}
+
+/* Desktop rail: a floating, rounded glass panel instead of a full-height column. */
+@media (min-width: 1024px) {
+  html[data-theme="glass"] .app-rail {
+    /*
+     * Full 248px wide, shifted into the gap before the content (which starts 40px further
+     * on), so the rail's contents keep exactly the room they have in classic.
+     */
+    top: 0.75rem;
+    left: 0.75rem;
+    height: calc(100vh - 1.5rem);
+    border: 1px solid var(--color-line);
+    border-radius: 1.5rem;
+    background-color: var(--glass-rail);
+  }
+}
+
+/*
+ * The worker dialog's overlay deliberately leaves the rail undimmed, starting at 248px.
+ * The floating rail ends 0.75rem further right, so the overlay starts there instead of
+ * shading the rail's edge.
+ */
+@media (min-width: 1024px) {
+  html[data-theme="glass"] .fixed.inset-0.lg\:left-\[248px\] {
+    left: calc(248px + 0.75rem);
+  }
+}
+
+/* The active rail row: a bright pill that lifts off the glass. */
+html[data-theme="glass"] :is(.app-rail, .app-drawer) [aria-current="page"] {
+  background-color: rgb(255 255 255 / 0.85);
+  box-shadow: 0 6px 16px -8px rgb(30 50 140 / 0.3);
+}
+
+/* Filled dark buttons get the same soft lift as the panels. */
+html[data-theme="glass"] .bg-ink:not(.rounded-full) {
+  box-shadow: 0 8px 18px -10px rgb(15 23 42 / 0.55);
+}
+
+html[data-theme="glass"] ::selection {
+  background-color: rgb(76 106 240 / 0.22);
+}

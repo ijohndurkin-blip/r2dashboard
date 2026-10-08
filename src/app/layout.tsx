@@ -3,6 +3,7 @@ import { Inter_Tight, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { AppSidebar } from "@/components/app-sidebar";
 import { PortalProvider } from "@/components/portal-provider";
+import { THEME_BOOT_SCRIPT } from "@/lib/theme";
 
 /**
  * Inter Tight rather than the scaffold's Geist: the same restrained-grotesque register,
@@ -29,7 +30,20 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en-GB" className={`${interTight.variable} ${jetbrainsMono.variable}`}>
+    /*
+     * data-theme defaults to classic; the boot script may switch it to glass before paint,
+     * so React is told to expect that one attribute to differ (suppressHydrationWarning
+     * covers this element's own attributes only, not its children).
+     */
+    <html
+      lang="en-GB"
+      data-theme="classic"
+      suppressHydrationWarning
+      className={`${interTight.variable} ${jetbrainsMono.variable}`}
+    >
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: THEME_BOOT_SCRIPT }} />
+      </head>
       <body className="min-h-screen antialiased">
         <PortalProvider>
           <a
